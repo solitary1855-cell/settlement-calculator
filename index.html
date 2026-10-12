@@ -140,13 +140,16 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.5}
 
 /* summary */
 .verdict{display:flex;flex-direction:column;gap:14px}
-.bigpair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bigpair{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:stretch}
 @media (max-width:420px){.bigpair{grid-template-columns:minmax(0,1fr)}}
 .bigbox{border:1px solid var(--line);border-radius:4px;padding:10px 12px;min-width:0}
 .bigbox.first{border-color:var(--accent);background:var(--accent-soft)}
 .big{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .big .v{font-family:var(--f-data);font-size:clamp(34px,4.6vw,46px);font-weight:500;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .big .u{font-family:var(--f-data);color:var(--muted);font-size:15px}
+.big.sm .v{font-size:clamp(20.4px,2.76vw,27.6px)}
+.big.sm .u{font-size:12px}
+.bigbox.second{display:flex;flex-direction:column;justify-content:center}
 .big-l{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
 .kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13px;border-top:1px solid var(--line);padding-top:10px;margin:0}
 .kv dt{color:var(--muted);margin:0}
@@ -330,7 +333,7 @@ footer.notes p{margin:0 0 6px}
             <div class="fig-scroll">
               <svg class="eqfig" viewBox="0 0 690 312" role="img" aria-label="等值基礎法三種情況示意：(a) 均質黏土中摩擦樁，等值筏基位於 2/3 樁長；(b) 樁穿過軟弱層進入承載層，等值筏基位於承載層內 2/3 樁長；(c) 端承樁，等值筏基位於樁尖">
                 <defs>
-                  <marker id="ah" viewBox="0 0 8 8" refX="4" refY="7" markerWidth="8" markerHeight="8" orient="auto"><path class="ah" d="M0 0L8 0L4 8z"/></marker>
+                  <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="ah" d="M0 0L8 4L0 8z"/></marker>
                 </defs>
                 <!-- (a) -->
                 <g transform="translate(5,0)">
@@ -418,9 +421,9 @@ footer.notes p{margin:0 0 6px}
           <div class="big-l">影響深度以內沉陷量</div>
           <div class="big"><span class="v" id="o-within">—</span><span class="u">cm</span></div>
         </div>
-        <div class="bigbox">
-          <div class="big-l">總沉陷量（全部計算層）</div>
-          <div class="big"><span class="v" id="o-total">—</span><span class="u">cm</span></div>
+        <div class="bigbox second">
+          <div class="big-l">設計總沉陷量（全部計算層）</div>
+          <div class="big sm"><span class="v" id="o-total">—</span><span class="u">cm</span></div>
         </div>
       </div>
       <dl class="kv">
@@ -860,7 +863,10 @@ function compute(s){
   R.inf=inf;
   R.within=inf===null?total:R.rows.reduce(function(t,r){return t+((!r.skip&&r.d<=inf)?r.S:0);},0);
   R.share=total>0?(total-R.within)/total:0;
-  R.rows.forEach(function(r){r.inside=!r.skip&&!r.above&&isFinite(r.ratio)&&r.ratio>crit;});
+  R.rows.forEach(function(r){
+    r.inside=!r.skip&&!r.above&&isFinite(r.ratio)&&r.ratio>crit;
+    if(inf!==null&&!r.skip&&!r.above&&r.d>inf){r.below=true;r.notes.unshift("非影響深度內，可不計");}
+  });
   if(R.qn<=0)R.alerts.push("淨壓力 ≤ 0（過補償），沉陷由回脹後再壓縮控制，請另以開挖卸載量檢核。");
   if(inf===null&&good.length)R.alerts.push("已輸入的土層範圍內未達影響深度準則，請補充更深的地層資料。");
   else if(R.share>0.1)R.alerts.push("影響深度以下仍有 "+(R.share*100).toFixed(1)+"% 的沉陷（下方有軟弱層），設計應採總沉陷量（全部計算層）。");
@@ -1027,7 +1033,7 @@ else window.addEventListener("resize",function(){if(last)draw(last);});
 function summaryRows(R){
   return [["案件名稱",state.name||"",""],["基礎寬度 B",fmt(R.B,2),"m"],["基礎長度 L",fmt(R.L,2),"m"],["基礎深度 Df",fmt(R.Df,2),"m"],["荷重作用面深度 Dq",fmt(R.Dq,2),"m"],["地下水位 GWT",isFinite(R.GW)?fmt(R.GW,2):"—","m"],
    ["總壓力 q_gross",fmt(R.qg,3),"t/m²"],["開挖解壓 σv(Df)",fmt(R.ex,3),"t/m²"],["淨壓力 q_net",fmt(R.qn,3),"t/m²"],
-   ["影響深度（距地表）",R.inf===null?"未達準則":fmt(R.inf,2),"m"],["影響深度以內沉陷量",fmt(R.within,2),"cm"],["總沉陷量（全部計算層）",fmt(R.total,2),"cm"]];
+   ["影響深度（距地表）",R.inf===null?"未達準則":fmt(R.inf,2),"m"],["影響深度以內沉陷量",fmt(R.within,2),"cm"],["設計總沉陷量（全部計算層）",fmt(R.total,2),"cm"]];
 }
 $("btn-copy").addEventListener("click",function(){
   var R=last; if(!R||!R.ok)return;
@@ -1164,7 +1170,7 @@ function buildDocx(R,png){
     ["總壓力 q_gross",fmt(R.qg,2),"t/m²"],["開挖解壓 σv(Df)"+(R.deduct?"":"（未扣除）"),fmt(R.ex,2),"t/m²"],["荷重作用面淨壓力 q_net",fmt(R.qn,2),"t/m²"],
     ["影響深度（距地表）",R.inf===null?"未達準則":fmt(R.inf,2),"m"],["影響深度（荷重作用面以下）",R.inf===null?"—":fmt(R.inf-R.Dq,2),"m"],["z / B",R.inf===null?"—":fmt((R.inf-R.Dq)/R.B,2),"—"],
     [{t:"影響深度以內沉陷量",b:true,fill:"EAF2F7",jc:"left"},{t:fmt(R.within,2),b:true,fill:"EAF2F7"},{t:"cm",fill:"EAF2F7"}],
-    [{t:"總沉陷量（全部計算層）",b:true,jc:"left"},{t:fmt(R.total,2),b:true},"cm"],
+    [{t:"設計總沉陷量（全部計算層）",b:true,jc:"left"},{t:fmt(R.total,2),b:true},"cm"],
     ["影響深度以下沉陷所佔比例",(R.share*100).toFixed(1)+"%","—"]
   ],{align:["left","center","center"],sz:20}));
   body.push(para("判讀：",{b:true,sp:[120,0]}));
