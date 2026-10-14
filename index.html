@@ -275,6 +275,11 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .tsum span{font-size:12px;color:var(--muted)}
 .tsum b .sep{font-size:inherit;color:var(--muted)}
 .tsum b .tot{font-size:.8em;color:var(--ink)}
+.tsum b #ts-s{font-size:inherit;color:inherit}
+.tsum input.stov{font:inherit;font-family:var(--f-data);font-size:1em;width:5.2em;padding:1px 6px;text-align:right;border:1px dashed var(--accent);background:var(--input);color:var(--ink)}
+.tsum input.stov:focus{border-style:solid}
+.tsum .ts-h{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.tsum .ts-h button{font-size:11.5px;padding:0 4px;color:var(--accent)}
 .tsum div.wide{grid-column:span 2}
 @media (max-width:640px){.tsum div.wide{grid-column:auto}}
 .tg td input,.tg td select{width:88px;text-align:right}
@@ -623,7 +628,7 @@ footer.notes p{margin:0 0 6px}
 (function(){
 "use strict";
 var DRAFT="settle-calc-t-v1", CASES="settle-cases-v1";
-var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:9,qIsPressure:true,wf:1.5,qx:0.5,qpre:0,deduct:true,crit:0.1,tq:1,cvu:"m2y",layers:[
+var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:9,qIsPressure:true,wf:1.5,qx:0.5,qpre:0,deduct:true,crit:0.1,tq:1,cvu:"m2y",stov:"",layers:[
  {n:"回填層",bot:3,gt:1.8,gs:1.9,m:"不計"},
  {n:"軟弱粉土質黏土 (1)",bot:6,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2,cv:2,dr:"雙向"},
  {n:"軟弱粉土質黏土 (2)",bot:9,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2,cv:2,dr:"雙向"},
@@ -1069,6 +1074,10 @@ function compute(s){
     return hi;
   }
   R.time.t50all=tFor(0.5); R.time.t90all=tFor(0.9);
+  /* 影響深度以內總沉陷量：可自訂，S(t) 依比例調整 */
+  var ov=num(s.stov), kk=(ov>0&&R.within>0)?ov/R.within:1;
+  R.time.Scalc=R.within; R.time.ov=(ov>0)?ov:null; R.time.k=kk; R.time.Sfin=(ov>0)?ov:R.within;
+  if(kk!==1){groups.forEach(function(g){g.Sin*=kk;g.S*=kk;}); SimmIn*=kk; R.time.SimmIn=SimmIn; R.time.Scons*=kk; R.time.SqIn=S_at(tq);}
   R.ok=true; return R;
 }
 
@@ -1205,9 +1214,22 @@ function renderTime(R){
   var tsum=$("tsum");
   if(!R.ok||!R.time){tsum.innerHTML="";tgBody.innerHTML="";tgSig=null;$("tchart").innerHTML="";return;}
   var T=R.time;
-  tsum.innerHTML='<div class="first wide"><span>t = '+fy(T.tq)+' 年　影響深度以內 S(t)／影響深度以內總沉陷量</span><b>'+fmt(T.SqIn,2)+'<span class="sep"> / </span><span class="tot">'+fmt(R.within,2)+'</span> cm</b></div>'+
-    '<div><span>壓密沉陷完成度 U(t)</span><b>'+(T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—")+'</b></div>'+
-    '<div><span>壓密沉陷達 50%／90% 所需時間</span><b>'+fy(T.t50all)+'／'+fy(T.t90all)+' 年</b></div>';
+  if(!tsum.querySelector("#stov")){
+    tsum.innerHTML='<div class="first wide"><span id="ts-l"></span><b><span id="ts-s"></span><span class="sep"> / </span><span class="tot"><input id="stov" class="stov" inputmode="decimal" aria-label="影響深度以內總沉陷量（可自訂）"></span> cm</b>'+
+      '<span class="ts-h"><span id="ts-h"></span> <button type="button" class="ghost" id="stov-reset" hidden>使用計算值</button></span></div>'+
+      '<div><span>壓密沉陷完成度 U(t)</span><b id="ts-u"></b></div>'+
+      '<div><span>壓密沉陷達 50%／90% 所需時間</span><b id="ts-t"></b></div>';
+    $("stov").addEventListener("input",function(e){var v=e.target.value.trim(); var n=num(v); e.target.classList.toggle("bad",v!==""&&!(n>0)); state.stov=(v===""||!(n>0))?"":n; run();});
+    $("stov").addEventListener("blur",function(){if(last&&last.time)$("stov").value=fmt(last.time.Sfin,2);});
+    $("stov-reset").addEventListener("click",function(){state.stov=""; $("stov").classList.remove("bad"); $("stov").value=""; run(); if(last&&last.time)$("stov").value=fmt(last.time.Sfin,2);});
+  }
+  $("ts-l").textContent="t = "+fy(T.tq)+" 年　影響深度以內 S(t)／影響深度以內總沉陷量";
+  $("ts-s").textContent=fmt(T.SqIn,2);
+  if(document.activeElement!==$("stov"))$("stov").value=fmt(T.Sfin,2);
+  $("ts-h").textContent=T.ov?("自訂值（計算值 "+fmt(T.Scalc,2)+" cm），S(t) 依比例調整"):"預設為 02 計算結果之值，可自行輸入";
+  $("stov-reset").hidden=!T.ov;
+  $("ts-u").textContent=T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—";
+  $("ts-t").textContent=fy(T.t50all)+"／"+fy(T.t90all)+" 年";
   Array.prototype.forEach.call(document.querySelectorAll(".cvuLbl"),function(e){e.textContent=CVU[T.cvu];});
   $("cvu").value=T.cvu;
   var sig=T.cvu+"#"+T.groups.map(function(g){return g.idx.join(",");}).join("|");
@@ -1492,6 +1514,7 @@ $("btn-copy").addEventListener("click",function(){
     R.time.groups.forEach(function(g){var u=g.ok?Uof(g.cv*R.time.tq/(g.Hdr*g.Hdr)):1;
       L.push([g.no,g.names.join("、"),fmt(g.top,2)+"～"+fmt(g.bot,2),fmt(g.H,2),g.dr,g.ok?(+g.cvIn.toPrecision(4)):"",fmt(g.Hdr,2),fmt(g.Sin,3),g.ok?fy(g.t50):"",g.ok?fy(g.t90):"",g.ok?(u*100).toFixed(1)+"%":"",fmt(g.Sin*u,3)].join("\t"));});
     L.push(["影響深度以內 S(t)",fmt(R.time.SqIn,3),"cm"].join("\t"));
+    L.push(["影響深度以內總沉陷量"+(R.time.ov?"（自訂，計算值 "+fmt(R.time.Scalc,2)+"）":""),fmt(R.time.Sfin,3),"cm"].join("\t"));
   }
   var txt=L.join("\n"), toast=$("toast");
   function fallback(){var ta=$("copybuf"); ta.value=txt; ta.select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){} toast.textContent=ok?"已複製，可直接貼到 Excel。":"無法自動複製，請改用手動選取表格內容。";}
@@ -1642,6 +1665,7 @@ function buildDocx(R,png,png2){
     T.groups.forEach(function(g){var u=g.ok?Uof(g.cv*T.tq/(g.Hdr*g.Hdr)):1;
       tr.push([g.no,{t:g.names.join("、"),jc:"left"},fmt(g.top,2)+"～"+fmt(g.bot,2),fmt(g.H,2),g.dr,g.ok?(+g.cvIn.toPrecision(4)):"未填",fmt(g.Hdr,2),fmt(g.Sin,2),g.ok?fy(g.t50):"—",g.ok?fy(g.t90):"—",g.ok?(u*100).toFixed(1)+"%":"—",fmt(g.Sin*u,2)]);});
     if(T.groups.length)body.push(table([480,1958,900,600,560,700,640,680,680,680,640,1120],tr,{sz:16}));
+    if(T.ov)body.push(para("影響深度以內總沉陷量採自訂值 "+fmt(T.ov,2)+" cm（計算值 "+fmt(T.Scalc,2)+" cm），各群組 Sc 與 S(t) 依比例 "+fmt(T.k,3)+" 調整。",{sp:[120,0]}));
     body.push(para("查詢時間 t = "+fy(T.tq)+" 年：影響深度以內沉陷量 S(t) = "+fmt(T.SqIn,2)+" cm，壓密沉陷完成度 U = "+(T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—")+"。",{sp:[120,40]}));
     body.push(para("壓密沉陷達 50% 所需時間約 "+fy(T.t50all)+" 年；達 90% 約 "+fy(T.t90all)+" 年。",{sp:[0,60]}));
     if(png2){var cx2=6120000, cy2=Math.round(cx2*png2.h/png2.w); body.push(imagePara("rIdImg2",cx2,cy2,2));
