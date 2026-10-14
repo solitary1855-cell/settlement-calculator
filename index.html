@@ -304,13 +304,14 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .cc-彈性{background-color:var(--sand);background-image:radial-gradient(var(--sand-ink) 1px,transparent 1.4px);background-size:7px 7px}
 .cc-不計{background-color:var(--hard);background-image:repeating-linear-gradient(45deg,var(--hard-ink) 0 1px,transparent 1px 9px)}
 .cc-bad{background:repeating-linear-gradient(45deg,var(--warn-soft) 0 6px,var(--surface) 6px 12px)}
-.colc .cc-d{position:absolute;left:3px;top:2px;font-family:var(--f-data);font-size:10.5px;line-height:1.2;color:var(--ink);background:var(--surface);padding:0 3px;border-radius:2px}
+.colc .cc-d{position:absolute;z-index:4;left:3px;top:2px;font-family:var(--f-data);font-size:10.5px;line-height:1.2;color:var(--ink);background:var(--surface);padding:0 3px;border-radius:2px}
 .colc .cc-d.b{top:auto;bottom:2px}
 .colc .cc-q,.colc .cc-i{position:absolute;left:-1px;right:-1px;height:0;z-index:2}
 .colc .cc-q{border-top:2px dashed var(--ink)}
 .colc .cc-i{border-top:2.5px solid var(--stress)}
 .colc .cc-l{position:absolute;right:3px;bottom:2px;font-family:var(--f-body);font-size:10.5px;line-height:1.2;white-space:nowrap;background:var(--surface);padding:0 3px;border-radius:2px}
-.colc .cc-q .cc-l{color:var(--ink)}
+.colc .cc-q .cc-l{color:var(--ink);bottom:auto;top:3px}
+.colc .cc-arr{position:absolute;left:3px;right:3px;bottom:2px;height:10px;background-color:var(--ink);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M6 0v6' stroke='%23000' stroke-width='1.3'/%3E%3Cpath d='M2.8 5.2L6 10l3.2-4.8z' fill='%23000'/%3E%3C/svg%3E") repeat-x left bottom/12px 10px;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M6 0v6' stroke='%23000' stroke-width='1.3'/%3E%3Cpath d='M2.8 5.2L6 10l3.2-4.8z' fill='%23000'/%3E%3C/svg%3E") repeat-x left bottom/12px 10px}
 .colc .cc-i .cc-l{color:var(--stress);bottom:auto;top:2px}
 .colc .cc-w{position:absolute;right:4px;z-index:3;transform:translateY(-100%);font-size:11px;line-height:1;color:var(--accent);font-weight:700;background:var(--surface);padding:1px 3px;border-radius:2px}
 .lg-inf{border-color:var(--stress)!important;border-top-width:3px!important}
@@ -556,7 +557,7 @@ footer.notes p{margin:0 0 6px}
         <span><span class="swatch cc-壓密" style="height:12px;width:18px"></span>壓密層</span>
         <span><span class="swatch cc-彈性" style="height:12px;width:18px"></span>彈性層</span>
         <span><span class="swatch cc-不計" style="height:12px;width:18px"></span>不計</span>
-        <span><i class="lg-q"></i>荷重作用面 Dq</span>
+        <span><i class="lg-q"></i>荷重作用面</span>
         <span><i class="lg-inf"></i>影響深度</span>
         <span><b class="gwt-ic">▽</b>地下水位</span>
       </div>
@@ -1172,8 +1173,9 @@ function renderTable(R){
     var w=Math.round(Math.abs(r.S||0)/maxS*48);
     var o=r.o, th=(isFinite(o.bot)&&o.bot>o.top)?o.bot-o.top:0, last=i===nRows-1;
     tr.style.height=Math.round(Math.min(150,Math.max(38,th*12)))+"px";
-    var col='<span class="cc-d">'+fmt(o.top,2)+'</span>'+(last&&!o.bad?'<span class="cc-d b">'+fmt(o.bot,2)+'</span>':"");
-    var pq=at(o,R.Dq,last); if(pq!==null)col+='<div class="cc-q" style="top:'+pq.toFixed(2)+'%"><span class="cc-l">Dq '+fmt(R.Dq,2)+' m</span></div>';
+    var pq=at(o,R.Dq,last);
+    var col=((pq!==null&&pq<12)?"":'<span class="cc-d">'+fmt(o.top,2)+'</span>')+(last&&!o.bad?'<span class="cc-d b">'+fmt(o.bot,2)+'</span>':"");
+    if(pq!==null)col+='<div class="cc-q" style="top:'+pq.toFixed(2)+'%"><span class="cc-arr" aria-hidden="true"></span><span class="cc-l">荷重作用面 '+fmt(R.Dq,2)+' m</span></div>';
     var pi=at(o,R.inf,last); if(pi!==null)col+='<div class="cc-i" style="top:'+pi.toFixed(2)+'%"><span class="cc-l">影響深度 '+fmt(R.inf,2)+' m</span></div>';
     var pw=at(o,R.GW,last); if(pw!==null)col+='<span class="cc-w" style="top:'+pw.toFixed(2)+'%">▽ GWT</span>';
     tr.innerHTML='<td class="colc '+(o.bad?"cc-bad":"cc-"+o.m)+'" aria-label="'+esc(o.n)+' '+fmt(o.top,2)+'～'+fmt(o.bot,2)+' m">'+col+'</td>'+
@@ -1456,7 +1458,8 @@ function columnSvg(R,W,H,exp){
   o.push('<line x1="'+(cx-5)+'" x2="'+(cx+cw)+'" y1="'+y(maxD)+'" y2="'+y(maxD)+'" stroke="'+C.ink+'" stroke-width="1"/><text x="'+(cx-8)+'" y="'+(y(maxD)+4)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.mut+'">'+fmt(maxD,2)+'</text>');
   o.push('<rect x="'+cx+'" y="'+pad.t+'" width="'+cw+'" height="'+(y(maxD)-pad.t)+'" fill="none" stroke="'+C.ink+'" stroke-width="1.2"/>');
   if(isFinite(R.GW)&&R.GW<=maxD){var gy=y(R.GW); o.push('<path d="M'+(cx+cw-28)+' '+(gy-10)+'h14l-7 10z" fill="'+C.acc+'"/><text x="'+(cx+cw-10)+'" y="'+(gy-2)+'" font-size="11" font-family="sans-serif" fill="'+C.acc+'">GWT</text>');}
-  var qy=y(R.Dq); o.push('<line x1="'+(cx-5)+'" x2="'+(W-10)+'" y1="'+qy+'" y2="'+qy+'" stroke="'+C.ink+'" stroke-width="1.6" stroke-dasharray="8 4"/><text x="'+(W-12)+'" y="'+(qy-5)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.ink+'">荷重作用面 Dq = '+fmt(R.Dq,2)+' m</text>');
+  var qy=y(R.Dq); o.push('<line x1="'+(cx-5)+'" x2="'+(W-10)+'" y1="'+qy+'" y2="'+qy+'" stroke="'+C.ink+'" stroke-width="1.6" stroke-dasharray="8 4"/><text x="'+(W-12)+'" y="'+(qy+15)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.ink+'">荷重作用面 '+fmt(R.Dq,2)+' m</text>');
+  for(var ax=cx+8;ax<=cx+cw-6;ax+=14){o.push('<path d="M'+ax+' '+(qy-13)+'v7" stroke="'+C.ink+'" stroke-width="1.3"/><path d="M'+(ax-3.2)+' '+(qy-7)+'L'+ax+' '+(qy-2)+'L'+(ax+3.2)+' '+(qy-7)+'z" fill="'+C.ink+'"/>');}
   if(R.inf!==null){var iy=y(R.inf); o.push('<line x1="'+(cx-5)+'" x2="'+(W-10)+'" y1="'+iy+'" y2="'+iy+'" stroke="'+C.st+'" stroke-width="2"/><text x="'+(W-12)+'" y="'+(iy-5)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.st+'">影響深度 '+fmt(R.inf,2)+' m</text>');}
   o.push('</svg>'); return o.join("");
 }
