@@ -237,6 +237,7 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .res td{font-family:var(--f-data);text-align:right;white-space:nowrap}
 .res th{text-align:right}
 .res th:nth-child(2),.res td.t-name{text-align:left;font-family:var(--f-body)}
+.res td.t-eq{font-family:var(--f-body);font-size:12px;color:var(--muted)}
 .res td.t-note{text-align:left;font-family:var(--f-body);white-space:normal;color:var(--warn);font-size:12px;min-width:160px}
 .res tr.above td{color:var(--muted)}
 .res tr.inside{background:var(--accent-soft)}
@@ -487,7 +488,7 @@ footer.notes p{margin:0 0 6px}
       </div>
       <div class="tbl-scroll">
         <table class="res" id="res">
-          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>Δσ/σ'v0</th><th>σ'p <span data-u="P">t/m²</span></th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
+          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>Δσ/σ'v0</th><th>σ'p <span data-u="P">t/m²</span></th><th>公式</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -506,9 +507,12 @@ footer.notes p{margin:0 0 6px}
     </div>
     <div>
       <h3>沉陷</h3>
-      <p>σ'v0+Δσ ≤ σ'p：S = Cr·H/(1+e0)·log[(σ'v0+Δσ)/σ'v0]</p>
-      <p>σ'v0+Δσ &gt; σ'p：S = Cr·H/(1+e0)·log(σ'p/σ'v0) + Cc·H/(1+e0)·log[(σ'v0+Δσ)/σ'p]</p>
-      <p>彈性層：S = Δσ·H/M。Δσ &lt; 0 時以 Cr 計算回脹（負值）。</p>
+      <p>依規範式(4.4-1)、圖-解 4.4-3。σ'0 = σ'v0，σ'c = σ'p（或 OCR·σ'0），σ'1 = σ'0 + Δσ，Cs 以 Cr 輸入。</p>
+      <p>過壓密 σ'1 &gt; σ'c：ΔH = H·Cs/(1+e0)·log(σ'c/σ'0) + H·Cc/(1+e0)·log(σ'1/σ'c)　(解 4.4-5)</p>
+      <p>過壓密 σ'1 ≤ σ'c：ΔH = H·Cs/(1+e0)·log(σ'1/σ'0)　(解 4.4-6)</p>
+      <p>正常壓密 σ'c = σ'0：ΔH = H·Cc/(1+e0)·log(σ'1/σ'0)　(解 4.4-7)</p>
+      <p>壓密未完成 σ'c &lt; σ'0：ΔH = H·Cc/(1+e0)·log(σ'1/σ'c)　(解 4.4-8)</p>
+      <p>彈性層：S = Δσ·H/M。Δσ &lt; 0 時以 Cr 計回脹（負值）。</p>
     </div>
     <div>
       <h3>使用限制</h3>
@@ -874,11 +878,22 @@ function compute(s){
         if(!(isFinite(o.e0)&&isFinite(o.cc)&&isFinite(o.cr))){r.notes.push("缺 e0／Cc／Cr，未計沉陷");}
         else if(!(r.s0>0)||!(r.sf>0)){r.notes.push("有效應力 ≤ 0，無法計算");}
         else{
+          /* 規範圖-解 4.4-3：σ'0 = σ'v0，σ'c = σ'p，σ'1 = σ'v0 + Δσ（膨脹指數 Cs 以 Cr 輸入） */
           var sp=(o.sp>0)?o.sp:((o.ocr>0?o.ocr:1)*r.s0); r.sp=sp;
-          if(o.sp>0&&o.sp<r.s0)r.notes.push("σ'p < σ'v0，已按正常壓密計");
-          var k=r.H/(1+o.e0), pc=Math.max(sp,r.s0), S;
-          if(r.ds<=0||r.sf<=pc)S=o.cr*k*Math.log10(r.sf/r.s0);
-          else S=o.cr*k*Math.log10(pc/r.s0)+o.cc*k*Math.log10(r.sf/pc);
+          var k=r.H/(1+o.e0), S, tol=1e-6*r.s0;
+          if(r.ds<=0){
+            S=o.cr*k*Math.log10(r.sf/r.s0); r.eq="回脹";
+            r.notes.push("淨卸載，以 Cr 計回脹（規範圖-解 4.4-3 未涵蓋）");
+          }else if(sp<r.s0-tol){
+            S=o.cc*k*Math.log10(r.sf/sp); r.eq="解4.4-8";
+            r.notes.push("σ'c < σ'0，壓密未完成土壤，自 σ'c 起算");
+          }else if(sp<=r.s0+tol){
+            S=o.cc*k*Math.log10(r.sf/r.s0); r.eq="解4.4-7";
+          }else if(r.sf<=sp){
+            S=o.cr*k*Math.log10(r.sf/r.s0); r.eq="解4.4-6";
+          }else{
+            S=o.cr*k*Math.log10(sp/r.s0)+o.cc*k*Math.log10(r.sf/sp); r.eq="解4.4-5";
+          }
           r.S=S*100;
         }
       }else if(o.m==="彈性"){
@@ -927,6 +942,7 @@ function renderSummary(R){
   R.alerts.forEach(function(t){var li=document.createElement("li");li.textContent=t;ul.appendChild(li);});
   if(ok&&!R.alerts.length){var li=document.createElement("li");li.className="ok";li.textContent="影響深度以下的沉陷貢獻小，計算至影響深度即可。";ul.appendChild(li);}
 }
+function eqLabel(r){if(r.eq)return r.eq.indexOf("解")===0?"式("+r.eq+")":r.eq; if(r.o&&r.o.m==="彈性"&&r.ds!==undefined)return "彈性"; return "—";}
 function renderTable(R){
   var tb=document.querySelector("#res tbody"), tf=document.querySelector("#res tfoot");
   tb.innerHTML=""; tf.innerHTML="";
@@ -943,13 +959,14 @@ function renderTable(R){
       '<td data-l="Δσ '+U().P+'">'+(r.ds===undefined?"—":fmt(r.ds,2))+'</td>'+
       '<td data-l="Δσ/σ\'v0">'+(r.ratio===undefined?"—":fmt(r.ratio,3))+'</td>'+
       '<td data-l="σ\'p '+U().P+'">'+(r.sp===undefined?"—":fmt(r.sp,2))+'</td>'+
+      '<td data-l="適用公式" class="t-eq">'+eqLabel(r).replace("式(","").replace(")","")+'</td>'+
       '<td data-l="S cm"><span class="sbar"><b style="width:'+w+'px"></b>'+fmt(r.S||0,2)+'</span></td>'+
       '<td data-l="累積 cm">'+fmt(r.cum,2)+'</td>'+
       '<td class="t-note">'+esc(r.notes.join("；"))+'</td>';
     tb.appendChild(tr);
   });
   var f=document.createElement("tr");
-  f.innerHTML='<td colspan="8" style="text-align:right;font-family:var(--f-body)">影響深度以內 '+fmt(R.within,2)+' cm ／ 總沉陷量</td><td>'+fmt(R.total,2)+'</td><td></td><td></td>';
+  f.innerHTML='<td colspan="9" style="text-align:right;font-family:var(--f-body)">影響深度以內 '+fmt(R.within,2)+' cm ／ 總沉陷量</td><td>'+fmt(R.total,2)+'</td><td></td><td></td>';
   tf.appendChild(f);
 }
 
@@ -1070,9 +1087,9 @@ $("btn-copy").addEventListener("click",function(){
   var L=[]; L.push(["項目","數值","單位"].join("\t"));
   summaryRows(R).forEach(function(a){L.push(a.join("\t"));});
   L.push("");
-  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 "+U().P,"Δσ "+U().P,"Δσ/σ'v0","σ'p "+U().P,"S cm","累積 cm","備註"].join("\t"));
+  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 "+U().P,"Δσ "+U().P,"Δσ/σ'v0","σ'p "+U().P,"適用公式","S cm","累積 cm","備註"].join("\t"));
   R.rows.forEach(function(r,i){
-    L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
+    L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),eqLabel(r)==="—"?"":eqLabel(r),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
   });
   var txt=L.join("\n"), toast=$("toast");
   function fallback(){var ta=$("copybuf"); ta.value=txt; ta.select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){} toast.textContent=ok?"已複製，可直接貼到 Excel。":"無法自動複製，請改用手動選取表格內容。";}
@@ -1177,21 +1194,25 @@ function buildDocx(R,png){
   ["總壓力：q_gross = Q/(B·L) + 基礎自重 + 額外加載；扣除開挖土重時，淨壓力 q_net = q_gross − σv(Df)。",
    "有效覆土應力：σ'v0 = σv − u。σv 由地表逐層累加（水位以上用 γt、以下用 γsat）；u = γw·(d − GWT)。",
    "應力增量（2:1 法）：Δσ = q_net·B·L / [(B + z)(L + z)]，z 為土層中點至荷重作用面之深度。荷重作用面以上之土層不計沉陷。",
-   "壓密沉陷：σ'v0 + Δσ ≤ σ'p 時，S = Cr·H/(1+e0)·log[(σ'v0+Δσ)/σ'v0]；σ'v0 + Δσ > σ'p 時，S = Cr·H/(1+e0)·log(σ'p/σ'v0) + Cc·H/(1+e0)·log[(σ'v0+Δσ)/σ'p]。",
+   "壓密沉陷：依《建築物基礎構造設計規範》式(4.4-1)及圖-解 4.4-3 計算。σ'0 為土層中點初始有效覆土應力（即 σ'v0），σ'c 為最大預壓密壓力（即 σ'p，未填時取 OCR × σ'0），σ'1 = σ'0 + Δσ；Cs 以 Cr 欄輸入。",
+   "　(a) 過壓密土壤（σ'c > σ'0），σ'1 > σ'c：ΔH = H·Cs/(1+e0)·log(σ'c/σ'0) + H·Cc/(1+e0)·log(σ'1/σ'c)　式(解 4.4-5)",
+   "　(a) 過壓密土壤（σ'c > σ'0），σ'1 ≤ σ'c：ΔH = H·Cs/(1+e0)·log(σ'1/σ'0)　式(解 4.4-6)",
+   "　(b) 正常壓密土壤（σ'c = σ'0）：ΔH = H·Cc/(1+e0)·log(σ'1/σ'0)　式(解 4.4-7)",
+   "　(c) 壓密未完成土壤（σ'c < σ'0）：ΔH = H·Cc/(1+e0)·log(σ'1/σ'c)　式(解 4.4-8)",
    "彈性沉陷：S = Δσ·H / M，M 為限制模數（= 1/mv）。",
    "影響深度：荷重作用面以下第一個 Δσ/σ'v0 ≤ "+fmt(R.crit,2)+" 之土層中點。"
   ].forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,60]}));});
   if(Math.abs(R.Dq-R.Df)>1e-6)body.push(para("•　荷重作用面深度 Dq（"+fmt(R.Dq,2)+" m）與基礎深度 Df（"+fmt(R.Df,2)+" m）不同，依 Terzaghi & Peck 等值基礎法（規範圖-解 5.5-3）計算：開挖土重僅扣除 Df 以上部分，Df～Dq 間土重已含於 σ'v0。",{ind:360,hang:360,sp:[0,60]}));
 
   body.push(para("四、逐層計算結果",{style:"Heading1"}));
-  var rr=[["#","土層","H m","中點 d m","σ'v0","Δσ","Δσ/σ'v0","σ'p","S cm","累積 cm"]];
+  var rr=[["#","土層","H m","中點 d m","σ'v0","Δσ","Δσ/σ'v0","σ'p","適用公式","S cm","累積 cm"]];
   R.rows.forEach(function(r,i){
     var fill=r.inside?"EAF2F7":"";
-    rr.push([i+1,r.o.n,r.skip?"—":fmt(r.H,2),r.skip?"—":fmt(r.d,2),r.skip?"—":fmt(r.s0,2),r.ds===undefined?"—":fmt(r.ds,2),r.ratio===undefined?"—":fmt(r.ratio,3),r.sp===undefined?"—":fmt(r.sp,2),fmt(r.S||0,2),fmt(r.cum,2)].map(function(v,ci){return {t:v,fill:fill,jc:ci===1?"left":"center"};}));
+    rr.push([i+1,r.o.n,r.skip?"—":fmt(r.H,2),r.skip?"—":fmt(r.d,2),r.skip?"—":fmt(r.s0,2),r.ds===undefined?"—":fmt(r.ds,2),r.ratio===undefined?"—":fmt(r.ratio,3),r.sp===undefined?"—":fmt(r.sp,2),eqLabel(r),fmt(r.S||0,2),fmt(r.cum,2)].map(function(v,ci){return {t:v,fill:fill,jc:ci===1?"left":"center"};}));
   });
-  rr.push([{t:""},{t:"合計",b:true},"","","","","","",{t:fmt(R.total,2),b:true},""]);
-  body.push(table([420,2218,800,900,900,900,900,900,900,900],rr,{sz:17}));
-  body.push(para("註：σ'v0、Δσ、σ'p 單位 "+U().P+"。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
+  rr.push([{t:""},{t:"合計",b:true},"","","","","","","",{t:fmt(R.total,2),b:true},""]);
+  body.push(table([380,1740,700,820,820,820,820,820,1078,820,820],rr,{sz:16}));
+  body.push(para("註：σ'v0、Δσ、σ'p 單位 "+U().P+"；σ'p 即規範圖-解 4.4-3 之 σ'c。適用公式為規範式(解 4.4-5)～(解 4.4-8)。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
   var notes=R.rows.map(function(r,i){return r.notes.length?("第 "+(i+1)+" 層（"+r.o.n+"）："+r.notes.join("；")):null;}).filter(Boolean);
   if(notes.length){body.push(para("各層備註：",{b:true,sp:[60,0],sz:20}));notes.forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,0],sz:20}));});}
 
@@ -1215,7 +1236,7 @@ function buildDocx(R,png){
   body.push(para((png?"七":"六")+"、備註",{style:"Heading1"}));
   ["本計算僅含最終主要壓密沉陷與彈性沉陷，未含壓密時間效應、次要壓密、樁身彈性縮短、鄰近基礎應力疊加及抽水降壓之影響。",
    "2:1 應力分佈法為近似解；附加應力為柔性載重之平均估算值。",
-   "σ'p < σ'v0（未完全壓密土）時按正常壓密計算。",
+   "壓密未完成土壤（σ'c < σ'0）依式(解 4.4-8) 自 σ'c 起算，已包含土層在自重下尚未完成之壓密量；淨卸載（Δσ < 0）時以 Cr 計回脹，非規範圖-解 4.4-3 涵蓋範圍。",
    "本計算書由土壤沉陷量計算器產生，供工程初估與檢核使用；正式設計請依《建築物基礎構造設計規範》及相關規定辦理。"
   ].forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,40],sz:20}));});
 
