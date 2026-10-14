@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="公噸制土壤沉陷量計算器：以 2:1 應力分佈逐層計算中點有效應力、應力增量與壓密／彈性沉陷，支援淺基礎、補償式筏基與 Terzaghi & Peck 等值筏基，可儲存案件並匯出 Word 計算書。">
+<meta name="description" content="土壤沉陷量計算器（可切換公噸制 t 或 SI 制 kN）：以 2:1 應力分佈逐層計算中點有效應力、應力增量與壓密／彈性沉陷，支援淺基礎、補償式筏基與 Terzaghi & Peck 等值筏基，可儲存案件並匯出 Word 計算書。">
 <meta name="theme-color" content="#1d5f86">
 <title>土壤沉陷量計算器</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d5f86'/%3E%3Crect x='7' y='6' width='9' height='6' fill='%23a9b2ae'/%3E%3Crect x='7' y='12' width='9' height='8' fill='%23b49770'/%3E%3Crect x='7' y='20' width='9' height='6' fill='%23e2cf9c'/%3E%3Cpath d='M19 6 Q21 18 26 26' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E">
@@ -45,7 +45,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);fo
 header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px}
 h1{font-family:var(--f-display);font-size:clamp(22px,4vw,30px);margin:0;letter-spacing:.02em;text-wrap:balance}
 .sub{color:var(--muted);margin:2px 0 0;font-size:13px}
-.unitbadge{font-family:var(--f-data);font-size:12px;border:1px solid var(--line);background:var(--surface);padding:4px 10px;border-radius:999px;color:var(--muted)}
+.unitsw{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:3px;gap:2px}
+.unitsw label{display:inline-flex;align-items:baseline;gap:6px;padding:5px 12px;border-radius:999px;cursor:pointer;font-size:13px;color:var(--muted);white-space:nowrap}
+.unitsw label small{font-family:var(--f-data);font-size:11px}
+.unitsw input{position:absolute;opacity:0;pointer-events:none}
+.unitsw label:has(input:checked){background:var(--accent);color:var(--surface)}
+.unitsw label:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:1px}
 h2{font-size:15px;margin:0;letter-spacing:.04em}
 h2 .n{font-family:var(--f-data);color:var(--accent);margin-right:6px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
@@ -264,7 +269,10 @@ footer.notes p{margin:0 0 6px}
       <h1>土壤沉陷量計算器</h1>
       <p class="sub">2:1 應力分佈 · 逐層中點有效應力 · 一維壓密／彈性沉陷</p>
     </div>
-    <span class="unitbadge">公噸制 · t · t/m² · t/m³</span>
+    <div class="unitsw" role="radiogroup" aria-label="單位制">
+      <label><input type="radio" name="unit" value="t"> 公噸制 <small>t · t/m²</small></label>
+      <label><input type="radio" name="unit" value="kN"> SI 制 <small>kN · kPa</small></label>
+    </div>
   </header>
 
   <div class="casebar" role="group" aria-label="案件">
@@ -313,11 +321,11 @@ footer.notes p{margin:0 0 6px}
         <fieldset>
           <legend>地下水位</legend>
           <div class="f"><label for="GW">地下水位深度 GWT</label><div class="inp"><input id="GW" data-k="GW" inputmode="decimal"><span class="u">m</span></div></div>
-          <div class="f"><label for="gw">水單位重 γw</label><div class="inp"><input id="gw" data-k="gw" inputmode="decimal"><span class="u">t/m³</span></div></div>
+          <div class="f"><label for="gw">水單位重 γw</label><div class="inp"><input id="gw" data-k="gw" inputmode="decimal"><span class="u" data-u="G">t/m³</span></div></div>
           <span class="legend-t" style="margin-top:10px">荷重</span>
-          <div class="f"><label for="Q">上部結構載重 Q<small>長期載重合計</small></label><div class="inp"><input id="Q" data-k="Q" inputmode="decimal"><span class="u">t</span></div></div>
-          <div class="f"><label for="wf">基礎自重</label><div class="inp"><input id="wf" data-k="wf" inputmode="decimal"><span class="u">t/m²</span></div></div>
-          <div class="f"><label for="qx">額外加載<small>回填、地坪、堆載</small></label><div class="inp"><input id="qx" data-k="qx" inputmode="decimal"><span class="u">t/m²</span></div></div>
+          <div class="f"><label for="Q">上部結構載重 Q<small>長期載重合計</small></label><div class="inp"><input id="Q" data-k="Q" inputmode="decimal"><span class="u" data-u="F">t</span></div></div>
+          <div class="f"><label for="wf">基礎自重</label><div class="inp"><input id="wf" data-k="wf" inputmode="decimal"><span class="u" data-u="P">t/m²</span></div></div>
+          <div class="f"><label for="qx">額外加載<small>回填、地坪、堆載</small></label><div class="inp"><input id="qx" data-k="qx" inputmode="decimal"><span class="u" data-u="P">t/m²</span></div></div>
           <label class="switch"><input type="checkbox" id="deduct" data-k="deduct"> 扣除 Df 以上開挖土重</label>
         </fieldset>
         <fieldset>
@@ -445,8 +453,8 @@ footer.notes p{margin:0 0 6px}
     <div class="tbl-scroll" id="layerwrap">
       <table class="layers" id="layers">
         <thead><tr>
-          <th>#</th><th>土層名稱</th><th>頂深 m</th><th>底深 m</th><th>γt t/m³<br>水位上</th><th>γsat t/m³<br>水位下</th><th>計算方法</th>
-          <th>e0</th><th>Cc</th><th>Cr</th><th>OCR</th><th>σ'p t/m²<br>選填</th><th>M t/m²<br>彈性</th><th></th>
+          <th>#</th><th>土層名稱</th><th>頂深 m</th><th>底深 m</th><th>γt <span data-u="G">t/m³</span><br>水位上</th><th>γsat <span data-u="G">t/m³</span><br>水位下</th><th>計算方法</th>
+          <th>e0</th><th>Cc</th><th>Cr</th><th>OCR</th><th>σ'p <span data-u="P">t/m²</span><br>選填</th><th>M <span data-u="P">t/m²</span><br>彈性</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -479,7 +487,7 @@ footer.notes p{margin:0 0 6px}
       </div>
       <div class="tbl-scroll">
         <table class="res" id="res">
-          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 t/m²</th><th>Δσ t/m²</th><th>Δσ/σ'v0</th><th>σ'p t/m²</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
+          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>Δσ/σ'v0</th><th>σ'p <span data-u="P">t/m²</span></th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -514,7 +522,7 @@ footer.notes p{margin:0 0 6px}
 (function(){
 "use strict";
 var DRAFT="settle-calc-t-v1", CASES="settle-cases-v1";
-var EXAMPLE={name:"範例：15×20 m 筏基",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:2700,wf:1.5,qx:0.5,deduct:true,crit:0.1,layers:[
+var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:2700,wf:1.5,qx:0.5,deduct:true,crit:0.1,layers:[
  {n:"回填層",bot:3,gt:1.8,gs:1.9,m:"不計"},
  {n:"軟弱粉土質黏土 (1)",bot:6,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
  {n:"軟弱粉土質黏土 (2)",bot:9,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
@@ -528,9 +536,9 @@ var EXAMPLE={name:"範例：15×20 m 筏基",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:270
 ]};
 var FIX=["B","L","Df","Dq","GW","gw","Q","wf","qx","crit"];
 var LCOLS=[
- {k:"bot",l:"底深 m"},{k:"gt",l:"γt 水位上"},{k:"gs",l:"γsat 水位下"},{k:"m",l:"計算方法",sel:1},
+ {k:"bot",l:"底深 m"},{k:"gt",l:"γt 水位上",u:"G"},{k:"gs",l:"γsat 水位下",u:"G"},{k:"m",l:"計算方法",sel:1},
  {k:"e0",l:"e0",on:["壓密"]},{k:"cc",l:"Cc",on:["壓密"]},{k:"cr",l:"Cr",on:["壓密"]},{k:"ocr",l:"OCR",on:["壓密"]},
- {k:"sp",l:"σ'p t/m²",on:["壓密"]},{k:"M",l:"M t/m²",on:["彈性"]}
+ {k:"sp",l:"σ'p",u:"P",on:["壓密"]},{k:"M",l:"M",u:"P",on:["彈性"]}
 ];
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function $(id){return document.getElementById(id);}
@@ -538,6 +546,9 @@ function num(v){if(v===null||v===undefined||v==="")return NaN; var x=parseFloat(
 function fmt(x,n){if(x===null||x===undefined||!isFinite(x))return "—"; return x.toFixed(n===undefined?2:n);}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function r3(x){return Math.round(x*1000)/1000;}
+var GACC=9.81;
+var UNITS={t:{key:"t",name:"公噸制",F:"t",P:"t/m²",G:"t/m³"},kN:{key:"kN",name:"SI 制",F:"kN",P:"kPa",G:"kN/m³"}};
+function U(){return UNITS[(state&&state.unit)==="kN"?"kN":"t"];}
 
 /* ---------- storage ---------- */
 var storageOK=true;
@@ -548,6 +559,7 @@ function normalize(s){
   var o=clone(EXAMPLE); Object.keys(o).forEach(function(k){if(s[k]!==undefined)o[k]=s[k];});
   o.layers=s.layers.map(function(l){return {n:l.n||"",bot:l.bot,gt:l.gt,gs:l.gs,m:(["壓密","彈性","不計"].indexOf(l.m)>=0?l.m:"壓密"),e0:l.e0,cc:l.cc,cr:l.cr,ocr:l.ocr,sp:l.sp,M:l.M};});
   if(typeof o.name!=="string")o.name="";
+  o.unit=(s.unit==="kN")?"kN":"t";
   return o;
 }
 var state=null, currentId=null, savedSnap=null;
@@ -592,7 +604,7 @@ $("btn-saveas").addEventListener("click",function(){doSave(true);});
 $("casename").addEventListener("input",function(e){state.name=e.target.value;e.target.classList.remove("bad");saveDraft();updateSaveChip();});
 function loadState(s,id){
   state=normalize(s)||clone(EXAMPLE); currentId=id||null; savedSnap=id?snap():null;
-  fillFixed(); buildLayers(); run();
+  fillFixed(); buildLayers(); applyUnitLabels(); run();
 }
 function renderCaseList(){
   var ul=$("caselist"), list=readCases(); ul.innerHTML="";
@@ -659,6 +671,24 @@ $("file-json").addEventListener("change",function(e){
   rd.readAsText(f); e.target.value="";
 });
 
+/* ---------- unit system ---------- */
+function applyUnitLabels(){
+  var u=U();
+  Array.prototype.forEach.call(document.querySelectorAll("[data-u]"),function(el){el.textContent=u[el.dataset.u];});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="unit"]'),function(r){r.checked=(r.value===u.key);});
+}
+function convVal(v,f){var n=num(v); if(!isFinite(n))return v; return Math.round(n*f*10000)/10000;}
+function switchUnit(to){
+  var from=state.unit==="kN"?"kN":"t"; if(to===from)return;
+  var f=to==="kN"?GACC:1/GACC;
+  ["gw","Q","wf","qx"].forEach(function(k){state[k]=convVal(state[k],f);});
+  state.layers.forEach(function(l){["gt","gs","sp","M"].forEach(function(k){l[k]=convVal(l[k],f);});});
+  state.unit=to;
+  fillFixed(); buildLayers(); applyUnitLabels(); run();
+  caseToast("已切換為"+U().name+"（"+U().F+"、"+U().P+"、"+U().G+"），輸入值已依 1 t = 9.81 kN 換算。");
+}
+Array.prototype.forEach.call(document.querySelectorAll('input[name="unit"]'),function(r){r.addEventListener("change",function(){if(r.checked)switchUnit(r.value);});});
+
 /* ---------- fixed inputs ---------- */
 function fillFixed(){
   FIX.forEach(function(k){var el=$(k); var v=state[k]; el.value=(v===undefined||v===null||(typeof v==="number"&&!isFinite(v)))?"":v; el.classList.remove("bad");});
@@ -706,8 +736,8 @@ function buildLayers(){
         h+='<td class="c-sel" data-l="'+c.l+'"><select id="ly'+i+'-m" data-f="m" aria-label="第'+(i+1)+'層計算方法">'+
           ["壓密","彈性","不計"].map(function(o){return '<option'+(ly.m===o?' selected':'')+'>'+o+'</option>';}).join("")+'</select></td>';
       }else{
-        var v=ly[c.k]; var dis=c.on&&c.on.indexOf(ly.m)<0;
-        h+='<td class="c-num" data-l="'+c.l+'"><input id="ly'+i+'-'+c.k+'" data-f="'+c.k+'" inputmode="decimal" aria-label="第'+(i+1)+'層 '+c.l+'" value="'+((v===undefined||v===null||v==="")?"":v)+'"'+(dis?" disabled":"")+'></td>';
+        var v=ly[c.k]; var dis=c.on&&c.on.indexOf(ly.m)<0; var lab=c.l+(c.u?" "+U()[c.u]:"");
+        h+='<td class="c-num" data-l="'+lab+'"><input id="ly'+i+'-'+c.k+'" data-f="'+c.k+'" inputmode="decimal" aria-label="第'+(i+1)+'層 '+lab+'" value="'+((v===undefined||v===null||v==="")?"":v)+'"'+(dis?" disabled":"")+'></td>';
       }
     });
     h+='<td class="acts"><button type="button" class="ghost" data-a="split" title="對分此層">對分</button><button type="button" class="ghost" data-a="del" title="刪除此層" aria-label="刪除第'+(i+1)+'層">刪除</button></td>';
@@ -887,9 +917,9 @@ function renderSummary(R){
   var ok=R.ok;
   $("o-within").textContent=ok?fmt(R.within,2):"—";
   $("o-total").textContent=ok?fmt(R.total,2):"—";
-  $("o-qg").textContent=ok?fmt(R.qg,2)+" t/m²":"—";
-  $("o-ex").textContent=ok?(R.deduct?"− ":"(未扣) ")+fmt(R.ex,2)+" t/m²":"—";
-  $("o-qn").textContent=ok?fmt(R.qn,2)+" t/m²":"—";
+  $("o-qg").textContent=ok?fmt(R.qg,2)+" "+U().P:"—";
+  $("o-ex").textContent=ok?(R.deduct?"− ":"(未扣) ")+fmt(R.ex,2)+" "+U().P:"—";
+  $("o-qn").textContent=ok?fmt(R.qn,2)+" "+U().P:"—";
   $("o-id").textContent=ok?(R.inf===null?"未達準則":fmt(R.inf,2)+" m"):"—";
   $("o-iz").textContent=ok&&R.inf!==null?fmt(R.inf-R.Dq,2)+" m ／ "+fmt((R.inf-R.Dq)/R.B,2):"—";
   $("o-sr").textContent=ok?(R.share*100).toFixed(1)+"%":"—";
@@ -909,10 +939,10 @@ function renderTable(R){
     tr.innerHTML='<td data-l="#">'+(i+1)+'</td><td class="t-name">'+esc(r.o.n)+'</td>'+
       '<td data-l="H m">'+(r.skip?"—":fmt(r.H,2))+'</td>'+
       '<td data-l="中點 d m">'+(r.skip?"—":fmt(r.d,2))+'</td>'+
-      '<td data-l="σ\'v0 t/m²">'+(r.skip?"—":fmt(r.s0,2))+'</td>'+
-      '<td data-l="Δσ t/m²">'+(r.ds===undefined?"—":fmt(r.ds,2))+'</td>'+
+      '<td data-l="σ\'v0 '+U().P+'">'+(r.skip?"—":fmt(r.s0,2))+'</td>'+
+      '<td data-l="Δσ '+U().P+'">'+(r.ds===undefined?"—":fmt(r.ds,2))+'</td>'+
       '<td data-l="Δσ/σ\'v0">'+(r.ratio===undefined?"—":fmt(r.ratio,3))+'</td>'+
-      '<td data-l="σ\'p t/m²">'+(r.sp===undefined?"—":fmt(r.sp,2))+'</td>'+
+      '<td data-l="σ\'p '+U().P+'">'+(r.sp===undefined?"—":fmt(r.sp,2))+'</td>'+
       '<td data-l="S cm"><span class="sbar"><b style="width:'+w+'px"></b>'+fmt(r.S||0,2)+'</span></td>'+
       '<td data-l="累積 cm">'+fmt(r.cum,2)+'</td>'+
       '<td class="t-note">'+esc(r.notes.join("；"))+'</td>';
@@ -976,7 +1006,7 @@ function svgString(R,W,Hh,exp){
     svg.push('<line '+A("grid")+' x1="'+xx+'" x2="'+xx+'" y1="'+pad.t+'" y2="'+(Hh-pad.b)+'"/>');
     svg.push('<text '+T()+' x="'+xx+'" y="'+(pad.t-8)+'" text-anchor="middle">'+(+sx.toFixed(2))+'</text>');
   }
-  svg.push('<text '+T()+' x="'+plotR+'" y="'+(pad.t-22)+'" text-anchor="end">應力 t/m²</text>');
+  svg.push('<text '+T()+' x="'+plotR+'" y="'+(pad.t-22)+'" text-anchor="end">應力 '+U().P+'</text>');
   svg.push('<line '+A("axis")+' x1="'+axL+'" x2="'+plotR+'" y1="'+pad.t+'" y2="'+pad.t+'"/><line '+A("axis")+' x1="'+axL+'" x2="'+axL+'" y1="'+pad.t+'" y2="'+(Hh-pad.b)+'"/>');
   var cx=pad.l, cw=colW;
   R.layers.forEach(function(o){
@@ -1032,7 +1062,7 @@ else window.addEventListener("resize",function(){if(last)draw(last);});
 /* ---------- copy ---------- */
 function summaryRows(R){
   return [["案件名稱",state.name||"",""],["基礎寬度 B",fmt(R.B,2),"m"],["基礎長度 L",fmt(R.L,2),"m"],["基礎深度 Df",fmt(R.Df,2),"m"],["荷重作用面深度 Dq",fmt(R.Dq,2),"m"],["地下水位 GWT",isFinite(R.GW)?fmt(R.GW,2):"—","m"],
-   ["總壓力 q_gross",fmt(R.qg,3),"t/m²"],["開挖解壓 σv(Df)",fmt(R.ex,3),"t/m²"],["淨壓力 q_net",fmt(R.qn,3),"t/m²"],
+   ["總壓力 q_gross",fmt(R.qg,3),U().P],["開挖解壓 σv(Df)",fmt(R.ex,3),U().P],["淨壓力 q_net",fmt(R.qn,3),U().P],
    ["影響深度（距地表）",R.inf===null?"未達準則":fmt(R.inf,2),"m"],["影響深度以內沉陷量",fmt(R.within,2),"cm"],["設計總沉陷量（全部計算層）",fmt(R.total,2),"cm"]];
 }
 $("btn-copy").addEventListener("click",function(){
@@ -1040,7 +1070,7 @@ $("btn-copy").addEventListener("click",function(){
   var L=[]; L.push(["項目","數值","單位"].join("\t"));
   summaryRows(R).forEach(function(a){L.push(a.join("\t"));});
   L.push("");
-  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 t/m²","Δσ t/m²","Δσ/σ'v0","σ'p t/m²","S cm","累積 cm","備註"].join("\t"));
+  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 "+U().P,"Δσ "+U().P,"Δσ/σ'v0","σ'p "+U().P,"S cm","累積 cm","備註"].join("\t"));
   R.rows.forEach(function(r,i){
     L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
   });
@@ -1123,13 +1153,13 @@ function buildDocx(R,png){
   var W=9638, body=[], today=stamp(Date.now()).slice(0,10);
   body.push(para("土壤沉陷量計算書",{style:"Title"}));
   body.push(para([{t:"案件名稱："},{t:state.name||"（未命名）",b:true}],{jc:"center",sp:[0,0]}));
-  body.push(para("計算日期："+today+"　　單位：公噸制（t、t/m²、t/m³）",{jc:"center",sp:[0,240],sz:20,color:"5A676B"}));
+  body.push(para("計算日期："+today+"　　單位："+U().name+"（"+U().F+"、"+U().P+"、"+U().G+"）",{jc:"center",sp:[0,240],sz:20,color:"5A676B"}));
 
   body.push(para("一、設計條件",{style:"Heading1"}));
   body.push(table([4600,2600,2438],[["項目","數值","單位"],
     ["基礎寬度 B",fmt(R.B,2),"m"],["基礎長度 L",fmt(R.L,2),"m"],["基礎深度 Df",fmt(R.Df,2),"m"],["荷重作用面深度 Dq",fmt(R.Dq,2),"m"],
-    ["地下水位深度 GWT",isFinite(R.GW)?fmt(R.GW,2):"—","m"],["水單位重 γw",fmt(R.gw,2),"t/m³"],
-    ["上部結構載重 Q",fmt(R.Q,1),"t"],["基礎自重",fmt(R.wf,2),"t/m²"],["額外加載",fmt(R.qx,2),"t/m²"],
+    ["地下水位深度 GWT",isFinite(R.GW)?fmt(R.GW,2):"—","m"],["水單位重 γw",fmt(R.gw,2),U().G],
+    ["上部結構載重 Q",fmt(R.Q,1),U().F],["基礎自重",fmt(R.wf,2),U().P],["額外加載",fmt(R.qx,2),U().P],
     ["扣除 Df 以上開挖土重",R.deduct?"是":"否","—"],["影響深度準則 Δσ/σ'v0 ≤",fmt(R.crit,2),"—"]
   ],{align:["left","center","center"],sz:20}));
 
@@ -1141,7 +1171,7 @@ function buildDocx(R,png){
   });
   lr[0]=lr[0].map(function(h){return h.replace("\n"," ");});
   body.push(table([380,1858,620,620,620,620,620,660,660,660,640,640,640],lr,{sz:16,align:["center","left"]}));
-  body.push(para("註：γt、γsat 單位 t/m³；σ'p、M 單位 t/m²。σ'p 未填時取 OCR × σ'v0。",{sz:18,color:"5A676B",sp:[60,0]}));
+  body.push(para("註：γt、γsat 單位 "+U().G+"；σ'p、M 單位 "+U().P+"。σ'p 未填時取 OCR × σ'v0。",{sz:18,color:"5A676B",sp:[60,0]}));
 
   body.push(para("三、計算方法",{style:"Heading1"}));
   ["總壓力：q_gross = Q/(B·L) + 基礎自重 + 額外加載；扣除開挖土重時，淨壓力 q_net = q_gross − σv(Df)。",
@@ -1161,13 +1191,13 @@ function buildDocx(R,png){
   });
   rr.push([{t:""},{t:"合計",b:true},"","","","","","",{t:fmt(R.total,2),b:true},""]);
   body.push(table([420,2218,800,900,900,900,900,900,900,900],rr,{sz:17}));
-  body.push(para("註：σ'v0、Δσ、σ'p 單位 t/m²。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
+  body.push(para("註：σ'v0、Δσ、σ'p 單位 "+U().P+"。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
   var notes=R.rows.map(function(r,i){return r.notes.length?("第 "+(i+1)+" 層（"+r.o.n+"）："+r.notes.join("；")):null;}).filter(Boolean);
   if(notes.length){body.push(para("各層備註：",{b:true,sp:[60,0],sz:20}));notes.forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,0],sz:20}));});}
 
   body.push(para("五、計算結果",{style:"Heading1"}));
   body.push(table([5400,2600,1638],[["項目","數值","單位"],
-    ["總壓力 q_gross",fmt(R.qg,2),"t/m²"],["開挖解壓 σv(Df)"+(R.deduct?"":"（未扣除）"),fmt(R.ex,2),"t/m²"],["荷重作用面淨壓力 q_net",fmt(R.qn,2),"t/m²"],
+    ["總壓力 q_gross",fmt(R.qg,2),U().P],["開挖解壓 σv(Df)"+(R.deduct?"":"（未扣除）"),fmt(R.ex,2),U().P],["荷重作用面淨壓力 q_net",fmt(R.qn,2),U().P],
     ["影響深度（距地表）",R.inf===null?"未達準則":fmt(R.inf,2),"m"],["影響深度（荷重作用面以下）",R.inf===null?"—":fmt(R.inf-R.Dq,2),"m"],["z / B",R.inf===null?"—":fmt((R.inf-R.Dq)/R.B,2),"—"],
     [{t:"影響深度以內沉陷量",b:true,fill:"EAF2F7",jc:"left"},{t:fmt(R.within,2),b:true,fill:"EAF2F7"},{t:"cm",fill:"EAF2F7"}],
     [{t:"設計總沉陷量（全部計算層）",b:true,jc:"left"},{t:fmt(R.total,2),b:true},"cm"],
@@ -1221,7 +1251,7 @@ $("btn-word").addEventListener("click",function(){
   }).catch(function(){caseToast("匯出失敗，請再試一次。",true);}).then(function(){b.disabled=false;b.textContent="匯出 Word 計算書";});
 });
 
-fillFixed(); buildLayers(); run();
+fillFixed(); buildLayers(); applyUnitLabels(); run();
 if(!storageOK){caseToast("這個瀏覽器不允許本機儲存，請改用「備份檔」保存案件。",true);}
 })();
 </script>
