@@ -328,7 +328,10 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
   .res td.t-eq{white-space:normal;text-align:right}
   .res th.col-h{display:none}
 }
-.split-tip{margin:10px 0 0;padding:6px 10px;border-left:3px solid var(--stress);background:var(--surface-2);color:var(--ink);max-width:none}
+.res-notes{margin-top:10px;font-size:12px;color:var(--ink);display:flex;flex-direction:column;gap:4px}
+.res-notes p{margin:0}
+.res-notes b{font-weight:500}
+.res-notes .k{display:inline-block;width:12px;height:12px;background:var(--accent-soft);border:1px solid var(--line);vertical-align:-2px;margin-right:4px}
 .res-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
 .res-key .k{display:inline-block;width:12px;height:12px;background:var(--accent-soft);border:1px solid var(--line);vertical-align:-2px;margin-right:4px}
 @media (max-width:640px){
@@ -574,8 +577,11 @@ footer.notes p{margin:0 0 6px}
           <tfoot></tfoot>
         </table>
       </div>
-      <p class="hint split-tip">提示：影響深度處建議分層。可在「03 土層參數」用「對分」或調整底深，讓土層界面落在影響深度附近，計算結果較準確。</p>
-      <div class="res-key"><span><span class="k"></span>尚未達影響深度準則的計算層</span><span class="toast" id="toast"></span></div>
+      <div class="res-notes">
+        <p><b>備註1：</b><span class="k"></span>底色標示者為影響深度以內之計算層。</p>
+        <p><b>備註2：</b>影響深度處建議分層。可在「03 土層參數」用「對分」或調整底深，讓土層界面落在影響深度附近，計算結果較準確。</p>
+      </div>
+      <div class="res-key"><span class="toast" id="toast"></span></div>
       <textarea id="copybuf" aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;top:0;width:1px;height:1px"></textarea>
     </section>
 
@@ -1027,7 +1033,7 @@ function compute(s){
   R.within=inf===null?total:R.rows.reduce(function(t,r){return t+((!r.skip&&r.d<=inf)?r.S:0);},0);
   R.share=total>0?(total-R.within)/total:0;
   R.rows.forEach(function(r){
-    r.inside=!r.skip&&!r.above&&isFinite(r.ratio)&&r.ratio>crit;
+    r.inside=!r.skip&&!r.above&&(inf===null||r.d<=inf);
     if(inf!==null&&!r.skip&&!r.above&&r.d>inf){r.below=true;r.notes.unshift("非影響深度內，可不計");}
   });
   if(R.qn<=0)R.alerts.push("淨壓力 ≤ 0（過補償），沉陷由回脹後再壓縮控制，請另以開挖卸載量檢核。");
@@ -1640,7 +1646,7 @@ function buildDocx(R,png,png2){
   });
   rr.push([{t:""},{t:"合計",b:true},"","","","","","","","",{t:fmt(R.total,2),b:true},""]);
   body.push(table([360,1478,600,680,720,720,720,720,720,1500,700,720],rr,{sz:15}));
-  body.push(para("註：σ'0、Δσ、σ'1、σ'c 單位 "+U().P+"。壓密判定依規範圖-解 4.4-3。適用公式為規範式(解 4.4-5)～(解 4.4-8)。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
+  body.push(para("註：σ'0、Δσ、σ'1、σ'c 單位 "+U().P+"。壓密判定依規範圖-解 4.4-3。適用公式為規範式(解 4.4-5)～(解 4.4-8)。底色標示者為影響深度以內之計算層。",{sz:18,color:"5A676B",sp:[60,60]}));
   var notes=R.rows.map(function(r,i){return r.notes.length?("第 "+(i+1)+" 層（"+r.o.n+"）："+r.notes.join("；")):null;}).filter(Boolean);
   if(notes.length){body.push(para("各層備註：",{b:true,sp:[60,0],sz:20}));notes.forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,0],sz:20}));});}
 
