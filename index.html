@@ -273,6 +273,10 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .tsum div.first{border-color:var(--accent);background:var(--accent-soft)}
 .tsum b{display:block;font-family:var(--f-data);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
 .tsum span{font-size:12px;color:var(--muted)}
+.tsum b .sep{font-size:inherit;color:var(--muted)}
+.tsum b .tot{font-size:.8em;color:var(--ink)}
+.tsum div.wide{grid-column:span 2}
+@media (max-width:640px){.tsum div.wide{grid-column:auto}}
 .tg td input,.tg td select{width:88px;text-align:right}
 .tg td select{text-align:left}
 .tg td.t-name{white-space:normal;min-width:140px}
@@ -1171,7 +1175,7 @@ function renderTime(R){
   var tsum=$("tsum");
   if(!R.ok||!R.time){tsum.innerHTML="";tgBody.innerHTML="";tgSig=null;$("tchart").innerHTML="";return;}
   var T=R.time;
-  tsum.innerHTML='<div class="first"><span>t = '+fy(T.tq)+' 年　影響深度以內 S(t)</span><b>'+fmt(T.SqIn,2)+' cm</b></div>'+
+  tsum.innerHTML='<div class="first wide"><span>t = '+fy(T.tq)+' 年　影響深度以內 S(t)／影響深度以內總沉陷量</span><b>'+fmt(T.SqIn,2)+'<span class="sep"> / </span><span class="tot">'+fmt(R.within,2)+'</span> cm</b></div>'+
     '<div><span>壓密沉陷完成度 U(t)</span><b>'+(T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—")+'</b></div>'+
     '<div><span>壓密沉陷達 50%／90% 所需時間</span><b>'+fy(T.t50all)+'／'+fy(T.t90all)+' 年</b></div>';
   Array.prototype.forEach.call(document.querySelectorAll(".cvuLbl"),function(e){e.textContent=CVU[T.cvu];});
