@@ -158,7 +158,20 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.5}
 .big-l{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:4px}
 .calc{display:flex;flex-direction:column;gap:8px;font-size:12.5px;min-width:0}
 .calc h3{font-size:12.5px;margin:4px 0 0;color:var(--ink)}
-.calc pre{font-family:var(--f-data);white-space:pre-wrap;word-break:break-word;margin:0;font-size:12px;line-height:1.65;background:var(--surface-2);padding:8px 10px;border-radius:4px;color:var(--ink);font-variant-numeric:tabular-nums}
+.calc details.cp{border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.calc details.cp>summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--accent)}
+.calc details.cp[open]>summary{margin-bottom:8px}
+.calc .cpb{display:flex;flex-direction:column;gap:8px}
+.calc .eqs{background:var(--surface-2);border-radius:4px;padding:8px 10px;font-family:var(--f-data);font-size:12px;color:var(--ink);display:flex;flex-direction:column;gap:8px;overflow-x:auto;font-variant-numeric:tabular-nums}
+.calc .ln{display:flex;flex-wrap:wrap;align-items:center;gap:2px 5px;line-height:1.5}
+.calc .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.35}
+.calc .fr>span{padding:0 3px;white-space:nowrap}
+.calc .fr>span:first-child{border-bottom:1px solid currentColor}
+.calc .pa{font-size:1.9em;line-height:1;font-weight:300;margin:0 -1px}
+.calc sub{font-size:.75em}
+.calc .tk{display:inline;white-space:normal}
+.calc .tk .fr{margin:0 2px}
+.calc .lg{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle}
 .calc .lay-h{font-weight:500}
 .calc .lay-h small{color:var(--muted);font-weight:400;margin-left:6px}
 .calc details>summary{cursor:pointer;color:var(--accent);font-size:12.5px}
@@ -1043,66 +1056,64 @@ function renderTops(R){
 function renderCalc(R){
   var box=$("calcbox"); if(!R.ok){box.innerHTML="";return;}
   var P=U().P, f2=function(v){return fmt(v,2);}, f3=function(v){return fmt(v,3);};
+  function F(n,d){return '<span class="fr"><span>'+n+'</span><span>'+d+'</span></span>';}
+  function LOG(x){return '<span class="lg">log<span class="pa">(</span>'+x+'<span class="pa">)</span></span>';}
+  function LN(){return '<div class="ln">'+Array.prototype.slice.call(arguments).map(function(t){return '<span class="tk">'+t+'</span>';}).join("")+'</div>';}
   function lg(a,b){return Math.log10(a/b);}
+  var s0="σ'<sub>0</sub>", sc_="σ'<sub>c</sub>", s1="σ'<sub>1</sub>", e0="e<sub>0</sub>", Cs="C<sub>s</sub>", Cc="C<sub>c</sub>", ds="Δσ", qn="q<sub>net</sub>";
   function layerBlock(r,i){
     var o=r.o, L=[];
-    L.push("z = d − Dq = "+f2(r.d)+" − "+f2(R.Dq)+" = "+f2(r.z)+" m");
-    L.push("Δσ = q_net·B·L / [(B+z)(L+z)]");
-    L.push("   = "+f2(R.qn)+"×"+f2(R.B)+"×"+f2(R.L)+" / [("+f2(R.B)+"+"+f2(r.z)+")("+f2(R.L)+"+"+f2(r.z)+")] = "+f2(r.ds)+" "+P);
-    L.push("σ'0 = σv − u = "+f2(r.sv)+" − "+f2(r.u)+" = "+f2(r.s0)+" "+P);
-    var s1line="σ'1 = σ'0 + Δσ = "+f2(r.s0)+" + "+f2(r.ds)+" = "+f2(r.s1)+" "+P;
-    var head='<div class="lay-h">第 '+(i+1)+' 層　'+esc(o.n)+'<small>H = '+f2(r.H)+' m，d = '+f2(r.d)+' m</small></div>';
+    L.push(LN("z = d − D<sub>q</sub> = "+f2(r.d)+" − "+f2(R.Dq)+" = "+f2(r.z)+" m"));
+    L.push(LN(ds+" =",F(qn+"·B·L","(B+z)(L+z)"),"=",F(f2(R.qn)+"×"+f2(R.B)+"×"+f2(R.L),"("+f2(R.B)+"+"+f2(r.z)+")("+f2(R.L)+"+"+f2(r.z)+")"),"= "+f2(r.ds)+" "+P));
+    L.push(LN(s0+" = σ<sub>v</sub> − u = "+f2(r.sv)+" − "+f2(r.u)+" = "+f2(r.s0)+" "+P));
+    var s1line=LN(s1+" = "+s0+" + "+ds+" = "+f2(r.s0)+" + "+f2(r.ds)+" = "+f2(r.s1)+" "+P);
+    var tag="";
     if(o.m==="彈性"){
       L.push(s1line);
-      if(o.M>0){L.push("S = Δσ·H / M = "+f2(r.ds)+"×"+f2(r.H)+" / "+(+o.M.toPrecision(6))+" × 100 = "+f2(r.S)+" cm");}
-      else L.push("缺限制模數 M，未計沉陷");
-      return head.replace("</small>","，彈性</small>")+'<pre>'+esc(L.join("\n"))+'</pre>';
+      if(o.M>0)L.push(LN("S =",F(ds+"·H","M"),"× 100 =",F(f2(r.ds)+"×"+f2(r.H),String(+o.M.toPrecision(6))),"× 100 = "+f2(r.S)+" cm"));
+      else L.push(LN("缺限制模數 M，未計沉陷"));
+      tag="彈性";
+    }else{
+      var sc=r.sp, src=r.spSrc;
+      if(src==="σ'p")L.push(LN(sc_+" = σ'<sub>p</sub>（輸入）= "+f2(sc)+" "+P));
+      else if(src==="OCR")L.push(LN(sc_+" = OCR × "+s0+" = "+f2(o.ocr)+" × "+f2(r.s0)+" = "+f2(sc)+" "+P));
+      else if(src==="預壓應力")L.push(LN(sc_+" = "+s0+" + 預壓應力 = "+f2(r.s0)+" + "+f2(R.qpre)+" = "+f2(sc)+" "+P));
+      else L.push(LN(sc_+" = "+s0+" = "+f2(sc)+" "+P+"（預壓應力 = 0）"));
+      L.push(s1line);
+      tag=r.state?(r.state+(r.eq&&r.eq!=="回脹"?" · 式("+r.eq+")":"")):"壓密";
+      if(!(isFinite(o.e0)&&isFinite(o.cc)&&isFinite(o.cr))){L.push(LN("缺 e<sub>0</sub>／C<sub>c</sub>／C<sub>s</sub>，未計沉陷"));}
+      else if(isFinite(r.S)&&r.s0>0&&r.s1>0&&sc>0){
+        var h=r.H/(1+o.e0), t1, t2, Hs=f2(r.H), E="1+"+f3(o.e0);
+        L.push(LN("判定："+r.state+"（"+s0+" = "+f2(r.s0)+"，"+sc_+" = "+f2(sc)+"，"+s1+" = "+f2(r.s1)+"）"));
+        if(r.eq==="解4.4-5"){
+          t1=h*o.cr*lg(sc,r.s0); t2=h*o.cc*lg(r.s1,sc);
+          L.push(LN("S =",F("H·"+Cs,"1+"+e0),LOG(F(sc_,s0)),"+",F("H·"+Cc,"1+"+e0),LOG(F(s1,sc_))));
+          L.push(LN("&nbsp;&nbsp;=",F(Hs+"×"+f3(o.cr),E),LOG(F(f2(sc),f2(r.s0))),"+",F(Hs+"×"+f3(o.cc),E),LOG(F(f2(r.s1),f2(sc)))));
+          L.push(LN("&nbsp;&nbsp;= "+fmt(t1*100,3)+" + "+fmt(t2*100,3)+" = "+fmt(r.S,3)+" ≈ <b>"+f2(r.S)+" cm</b>"));
+        }else if(r.eq==="解4.4-6"||r.eq==="回脹"){
+          L.push(LN("S =",F("H·"+Cs,"1+"+e0),LOG(F(s1,s0)),"=",F(Hs+"×"+f3(o.cr),E),LOG(F(f2(r.s1),f2(r.s0))),"= <b>"+f2(r.S)+" cm</b>"));
+        }else if(r.eq==="解4.4-7"){
+          L.push(LN("S =",F("H·"+Cc,"1+"+e0),LOG(F(s1,s0)),"=",F(Hs+"×"+f3(o.cc),E),LOG(F(f2(r.s1),f2(r.s0))),"= <b>"+f2(r.S)+" cm</b>"));
+        }else if(r.eq==="解4.4-8"){
+          L.push(LN("S =",F("H·"+Cc,"1+"+e0),LOG(F(s1,sc_)),"=",F(Hs+"×"+f3(o.cc),E),LOG(F(f2(r.s1),f2(sc))),"= <b>"+f2(r.S)+" cm</b>"));
+        }
+      }else L.push(LN("有效應力 ≤ 0，無法計算"));
     }
-    var sc=r.sp, src=r.spSrc;
-    if(src==="σ'p")L.push("σ'c = σ'p（輸入）= "+f2(sc)+" "+P);
-    else if(src==="OCR")L.push("σ'c = OCR × σ'0 = "+f2(o.ocr)+" × "+f2(r.s0)+" = "+f2(sc)+" "+P);
-    else if(src==="預壓應力")L.push("σ'c = σ'0 + 預壓應力 = "+f2(r.s0)+" + "+f2(R.qpre)+" = "+f2(sc)+" "+P);
-    else L.push("σ'c = σ'0 = "+f2(sc)+" "+P+"（預壓應力 = 0）");
-    L.push(s1line);
-    var st=r.state?(r.state+(r.eq&&r.eq!=="回脹"?" · 式("+r.eq+")":"")):"";
-    if(!(isFinite(o.e0)&&isFinite(o.cc)&&isFinite(o.cr))){L.push("缺 e0／Cc／Cs，未計沉陷");}
-    else if(isFinite(r.S)&&r.s0>0&&r.s1>0&&sc>0){
-      var k="H/(1+e0) = "+f2(r.H)+"/(1+"+f3(o.e0)+")";
-      var h=r.H/(1+o.e0), t1, t2;
-      L.push("判定："+r.state+"（σ'0 = "+f2(r.s0)+"，σ'c = "+f2(sc)+"，σ'1 = "+f2(r.s1)+"）");
-      if(r.eq==="解4.4-5"){
-        t1=h*o.cr*lg(sc,r.s0); t2=h*o.cc*lg(r.s1,sc);
-        L.push("S = H·Cs/(1+e0)·log(σ'c/σ'0) + H·Cc/(1+e0)·log(σ'1/σ'c)");
-        L.push("  = "+f2(r.H)+"×"+f3(o.cr)+"/(1+"+f3(o.e0)+")×log("+f2(sc)+"/"+f2(r.s0)+") + "+f2(r.H)+"×"+f3(o.cc)+"/(1+"+f3(o.e0)+")×log("+f2(r.s1)+"/"+f2(sc)+")");
-        L.push("  = "+fmt(t1*100,3)+" + "+fmt(t2*100,3)+" = "+fmt(r.S,3)+" ≈ "+f2(r.S)+" cm");
-      }else if(r.eq==="解4.4-6"||r.eq==="回脹"){
-        t1=h*o.cr*lg(r.s1,r.s0);
-        L.push("S = H·Cs/(1+e0)·log(σ'1/σ'0)");
-        L.push("  = "+f2(r.H)+"×"+f3(o.cr)+"/(1+"+f3(o.e0)+")×log("+f2(r.s1)+"/"+f2(r.s0)+") = "+f2(r.S)+" cm");
-      }else if(r.eq==="解4.4-7"){
-        t1=h*o.cc*lg(r.s1,r.s0);
-        L.push("S = H·Cc/(1+e0)·log(σ'1/σ'0)");
-        L.push("  = "+f2(r.H)+"×"+f3(o.cc)+"/(1+"+f3(o.e0)+")×log("+f2(r.s1)+"/"+f2(r.s0)+") = "+f2(r.S)+" cm");
-      }else if(r.eq==="解4.4-8"){
-        t1=h*o.cc*lg(r.s1,sc);
-        L.push("S = H·Cc/(1+e0)·log(σ'1/σ'c)");
-        L.push("  = "+f2(r.H)+"×"+f3(o.cc)+"/(1+"+f3(o.e0)+")×log("+f2(r.s1)+"/"+f2(sc)+") = "+f2(r.S)+" cm");
-      }
-    }else L.push("有效應力 ≤ 0，無法計算");
-    return head.replace("</small>","，"+esc(st||"壓密")+"</small>")+'<pre>'+esc(L.join("\n"))+'</pre>';
+    return '<div class="lay-h">第 '+(i+1)+' 層　'+esc(o.n)+'<small>H = '+f2(r.H)+' m，d = '+f2(r.d)+' m，'+tag+'</small></div><div class="eqs">'+L.join("")+'</div>';
   }
   var calc=R.rows.map(function(r,i){return {r:r,i:i};}).filter(function(x){return !x.r.skip&&!x.r.above&&x.r.ds!==undefined&&(x.r.o.m==="壓密"||x.r.o.m==="彈性");});
   var within=calc.filter(function(x){return R.inf===null||x.r.d<=R.inf;}), below=calc.filter(function(x){return !(R.inf===null||x.r.d<=R.inf);});
   function sumExpr(arr){return arr.length?arr.map(function(x){return f2(x.r.S);}).join(" + "):"0";}
   var h=[];
-  h.push('<h3>荷重作用面淨壓力</h3><pre>'+esc("q_net = Q + 基礎自重 + 額外加載"+(R.deduct?" − σv(Df)":"")+"\n      = "+f2(R.Q)+" + "+f2(R.wf)+" + "+f2(R.qx)+(R.deduct?" − "+f2(R.ex):"")+" = "+f2(R.qn)+" "+P)+'</pre>');
-  h.push('<h3>影響深度以內沉陷量</h3><pre>'+esc("S = ΣSᵢ（中點深度 d ≤ "+(R.inf===null?"—":f2(R.inf))+" m）\n  = "+sumExpr(within)+"\n  = "+f2(R.within)+" cm")+'</pre>');
+  h.push('<h3>荷重作用面淨壓力</h3><div class="eqs">'+LN(qn+" = Q + 基礎自重 + 額外加載"+(R.deduct?" − σ<sub>v</sub>(D<sub>f</sub>)":""))+
+    LN("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= "+f2(R.Q)+" + "+f2(R.wf)+" + "+f2(R.qx)+(R.deduct?" − "+f2(R.ex):"")+" = "+f2(R.qn)+" "+P)+'</div>');
+  h.push('<h3>影響深度以內沉陷量</h3><div class="eqs">'+LN("S = ΣS<sub>i</sub>（中點深度 d ≤ "+(R.inf===null?"—":f2(R.inf))+" m）")+LN("&nbsp;&nbsp;= "+sumExpr(within))+LN("&nbsp;&nbsp;= <b>"+f2(R.within)+" cm</b>")+'</div>');
   h.push('<div class="lays">'+within.map(function(x){return '<div>'+layerBlock(x.r,x.i)+'</div>';}).join("")+'</div>');
-  h.push('<h3>設計總沉陷量（全部計算層）</h3><pre>'+esc("S = 影響深度以內 + 影響深度以下各層\n  = "+f2(R.within)+(below.length?" + ("+sumExpr(below)+")":"")+"\n  = "+f2(R.total)+" cm")+'</pre>');
-  if(below.length)h.push('<details><summary>影響深度以下各層計算式（'+below.length+' 層）</summary><div class="lays">'+below.map(function(x){return '<div>'+layerBlock(x.r,x.i)+'</div>';}).join("")+'</div></details>');
-  var wasOpen=box.querySelector("details")&&box.querySelector("details").open;
-  box.innerHTML=h.join("");
-  if(wasOpen&&box.querySelector("details"))box.querySelector("details").open=true;
+  h.push('<h3>設計總沉陷量（全部計算層）</h3><div class="eqs">'+LN("S = 影響深度以內 + 影響深度以下各層")+LN("&nbsp;&nbsp;= "+f2(R.within)+(below.length?" + ("+sumExpr(below)+")":""))+LN("&nbsp;&nbsp;= <b>"+f2(R.total)+" cm</b>")+'</div>');
+  if(below.length)h.push('<details class="sub"><summary>影響深度以下各層計算式（'+below.length+' 層）</summary><div class="lays">'+below.map(function(x){return '<div>'+layerBlock(x.r,x.i)+'</div>';}).join("")+'</div></details>');
+  var det=box.querySelector("details.cp"), wasOpen=det?det.open:false, sub=box.querySelector("details.sub"), subOpen=sub?sub.open:false;
+  box.innerHTML='<details class="cp"'+(wasOpen?" open":"")+'><summary>計算過程</summary><div class="cpb">'+h.join("")+'</div></details>';
+  if(subOpen&&box.querySelector("details.sub"))box.querySelector("details.sub").open=true;
 }
 function renderSummary(R){
   var ok=R.ok;
