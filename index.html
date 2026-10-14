@@ -278,7 +278,12 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .tg td.t-name{white-space:normal;min-width:140px}
 .tg td.t-name::before{white-space:nowrap;margin-right:10px}
 #tchart{width:100%;min-height:300px;margin-top:12px}
-#tchart svg{display:block;width:100%;height:auto}
+#tchart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+#tchart .t-hit{stroke:transparent;stroke-width:22;cursor:ew-resize}
+#tchart .t-plot{fill:transparent;cursor:crosshair}
+#tchart .t-knob{fill:var(--stress);stroke:var(--surface);stroke-width:2;cursor:ew-resize}
+#tchart .t-knob-i{stroke:var(--surface);stroke-width:1.2}
+#tchart.dragging,#tchart.dragging *{cursor:ew-resize!important;user-select:none;-webkit-user-select:none}
 #tchart text{font-family:var(--f-data);font-size:11px;fill:var(--muted)}
 #tchart .t-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 3;opacity:.8}
 #tchart .t-axis{stroke:var(--line);stroke-width:1}
@@ -560,7 +565,7 @@ footer.notes p{margin:0 0 6px}
       <div id="tchart" role="img" aria-label="沉陷量隨時間變化曲線"></div>
       <div class="legend">
         <span><i class="lg-in"></i>影響深度以內 S(t)</span>
-        <span><i class="lg-tq"></i>查詢時間 t</span>
+        <span><i class="lg-tq"></i>查詢時間 t（可直接左右拖曳）</span>
       </div>
       <p class="hint" style="margin-top:8px">只計影響深度以內的沉陷。相連的壓密層自動歸為同一黏土層群組，排水路徑 Hdr 依整個黏土層厚度決定（雙向 = H/2、單向 = H），Sc 只計影響深度以內的部分；cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。cv 換算：1 m²/時 = 8,760 m²/年，1 cm²/分 = 52.56 m²/年。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
     </section>
@@ -1229,6 +1234,7 @@ function timeSvg(R,W,H,exp){
   var tmax=1; T.groups.forEach(function(g){if(g.ok)tmax=Math.max(tmax,2.0*g.Hdr*g.Hdr/g.cv);}); tmax=Math.max(tmax,T.tq*1.5);
   var tmin=tmax; T.groups.forEach(function(g){if(g.ok)tmin=Math.min(tmin,0.005*g.Hdr*g.Hdr/g.cv);}); tmin=Math.min(tmin,T.tq/3,0.1);
   var d0=Math.floor(Math.log10(tmin)), d1=Math.ceil(Math.log10(tmax)); if(d1-d0<2)d0=d1-2;
+  if(!exp&&tFix){d0=tFix.d0;d1=tFix.d1;}
   var pad={t:22,r:16,b:40,l:58};
   function xs(t){return pad.l+(Math.log10(t)-d0)/(d1-d0)*(W-pad.l-pad.r);}
   var smax=Math.max(T.S_at(Math.pow(10,d1)),0.01);
@@ -1248,10 +1254,16 @@ function timeSvg(R,W,H,exp){
   o.push('<text '+TX()+' x="'+(pad.l-6)+'" y="'+(pad.t-8)+'" text-anchor="end">S cm</text>');
   o.push('<line '+A("t-axis")+' x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+pad.t+'" y2="'+pad.t+'"/><line '+A("t-axis")+' x1="'+pad.l+'" x2="'+pad.l+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
   function path(){var p="",N=140; for(var k=0;k<=N;k++){var t=Math.pow(10,d0+(d1-d0)*k/N); p+=(k?"L":"M")+xs(t).toFixed(1)+" "+ys(T.S_at(t)).toFixed(1);} return p;}
+  if(!exp){o.push('<rect class="t-plot" x="'+pad.l+'" y="'+pad.t+'" width="'+(W-pad.l-pad.r)+'" height="'+(H-pad.t-pad.b)+'"/>'); tMap={d0:d0,d1:d1,l:pad.l,r:W-pad.r,W:W};}
   o.push('<path '+A("t-in")+' d="'+path()+'"/>');
   if(T.tq>=Math.pow(10,d0)&&T.tq<=Math.pow(10,d1)){
     var qx=xs(T.tq); o.push('<line '+A("t-q")+' x1="'+qx+'" x2="'+qx+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
     o.push('<circle '+A("t-dot")+' r="4" cx="'+qx+'" cy="'+ys(T.SqIn)+'"/>');
+    if(!exp){
+      var ky=pad.t;
+      o.push('<line class="t-hit" x1="'+qx+'" x2="'+qx+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
+      o.push('<g><rect class="t-knob" x="'+(qx-9)+'" y="'+(ky-8)+'" width="18" height="16" rx="4"/><line class="t-knob-i" x1="'+(qx-3)+'" x2="'+(qx-3)+'" y1="'+(ky-4)+'" y2="'+(ky+4)+'"/><line class="t-knob-i" x1="'+(qx+3)+'" x2="'+(qx+3)+'" y1="'+(ky-4)+'" y2="'+(ky+4)+'"/></g>');
+    }
     var right=qx>W*0.5; o.push('<text '+TX("t-qt")+' x="'+(qx+(right?-6:6))+'" y="'+(H-pad.b-8)+'" text-anchor="'+(right?"end":"start")+'">t = '+fy(T.tq)+' 年：S = '+fmt(T.SqIn,2)+' cm</text>');
   }
   if(exp){
@@ -1260,6 +1272,34 @@ function timeSvg(R,W,H,exp){
   }
   o.push('</svg>'); return o.join("");
 }
+var tMap=null, tFix=null, tDrag=null, tRaf=0;
+function tFromX(clientX){
+  var el=$("tchart"), sv=el.querySelector("svg"); if(!sv||!tMap)return null;
+  var rc=sv.getBoundingClientRect(), x=(clientX-rc.left)*tMap.W/rc.width;
+  x=Math.min(tMap.r,Math.max(tMap.l,x));
+  var t=Math.pow(10,tMap.d0+(x-tMap.l)/(tMap.r-tMap.l)*(tMap.d1-tMap.d0));
+  return +t.toPrecision(3);
+}
+function setTq(t){
+  if(!(t>0))return; state.tq=t; $("tq").value=t; $("tq").classList.remove("bad");
+  if(!tRaf)tRaf=requestAnimationFrame(function(){tRaf=0; run();});
+}
+(function(){
+  var el=$("tchart");
+  el.addEventListener("pointerdown",function(e){
+    if(e.button>0||!tMap)return;
+    var sv=el.querySelector("svg"); if(!sv)return;
+    var rc=sv.getBoundingClientRect(), x=(e.clientX-rc.left)*tMap.W/rc.width;
+    if(x<tMap.l-12||x>tMap.r+12)return;
+    e.preventDefault();
+    tDrag={id:e.pointerId}; tFix={d0:tMap.d0,d1:tMap.d1};
+    try{el.setPointerCapture(e.pointerId);}catch(err){}
+    el.classList.add("dragging"); setTq(tFromX(e.clientX));
+  });
+  el.addEventListener("pointermove",function(e){ if(!tDrag||e.pointerId!==tDrag.id)return; setTq(tFromX(e.clientX)); });
+  function end(e){ if(!tDrag||(e&&e.pointerId!==tDrag.id))return; tDrag=null; tFix=null; el.classList.remove("dragging"); run(); }
+  el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end); el.addEventListener("lostpointercapture",end);
+})();
 function drawTime(R){
   var el=$("tchart"), W=Math.max(300,el.clientWidth||600);
   if(!R.ok||!R.time||(!R.time.groups.length&&!R.time.SimmIn)){el.innerHTML='<p class="hint">影響深度以內沒有可計算的沉陷層。</p>';return;}
