@@ -555,7 +555,7 @@ footer.notes p{margin:0 0 6px}
     <section class="panel" aria-labelledby="h-time">
       <div class="panel-head"><h2 id="h-time"><span class="n">06</span>壓密時間</h2>
         <div class="btns">
-          <label class="tq" for="cvu">cv 單位 <select id="cvu"><option value="m2y">m²/年</option><option value="m2h">m²/時</option><option value="cm2m">cm²/分</option></select></label>
+          <label class="tq" for="cvu">cv 單位 <select id="cvu"><option value="m2y">m²/年</option><option value="m2h">m²/時</option><option value="cm2m">cm²/分</option><option value="cm2s">cm²/sec</option></select></label>
           <label class="tq" for="tq">查詢時間 t <span class="inp"><input id="tq" data-k="tq" inputmode="decimal"><span class="u">年</span></span></label>
         </div>
       </div>
@@ -571,7 +571,7 @@ footer.notes p{margin:0 0 6px}
         <span><i class="lg-in"></i>影響深度以內 S(t)</span>
         <span><i class="lg-tq"></i>查詢時間 t（可直接左右拖曳）</span>
       </div>
-      <p class="hint" style="margin-top:8px">只計影響深度以內的沉陷。相連的壓密層自動歸為同一黏土層群組，排水路徑 Hdr 依整個黏土層厚度決定（雙向 = H/2、單向 = H），Sc 只計影響深度以內的部分；cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。cv 換算：1 m²/時 = 8,760 m²/年，1 cm²/分 = 52.56 m²/年。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
+      <p class="hint" style="margin-top:8px">只計影響深度以內的沉陷。相連的壓密層自動歸為同一黏土層群組，排水路徑 Hdr 依整個黏土層厚度決定（雙向 = H/2、單向 = H），Sc 只計影響深度以內的部分；cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。cv 換算：1 m²/時 = 8,760 m²/年，1 cm²/分 = 52.56 m²/年，1 cm²/sec = 3,153.6 m²/年。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
     </section>
   </div>
 
@@ -1012,7 +1012,7 @@ function compute(s){
     var isC=!r.skip&&!r.above&&r.o.m==="壓密";
     if(isC){ if(!cur){cur={rows:[]};groups.push(cur);} cur.rows.push(r); } else cur=null;
   });
-  var CVF={m2y:1,m2h:8760,cm2m:52.56}, cvf=CVF[s.cvu]||1;
+  var CVF={m2y:1,m2h:8760,cm2m:52.56,cm2s:3153.6}, cvf=CVF[s.cvu]||1;
   var Simm=0, SimmIn=0;
   R.rows.forEach(function(r){ if(!r.skip&&!r.above&&r.o.m!=="壓密"){ Simm+=r.S||0; if(inf===null||r.d<=inf)SimmIn+=r.S||0; } });
   groups.forEach(function(g,gi){
@@ -1222,9 +1222,9 @@ tgBody.addEventListener("change",function(e){
   var idx=t.closest("tr").dataset.idx.split(",").map(Number);
   idx.forEach(function(i){if(state.layers[i])state.layers[i].dr=t.value;}); run();
 });
-var CVU={m2y:"m²/年",m2h:"m²/時",cm2m:"cm²/分"};
+var CVU={m2y:"m²/年",m2h:"m²/時",cm2m:"cm²/分",cm2s:"cm²/sec"};
 $("cvu").addEventListener("change",function(e){
-  var CVF={m2y:1,m2h:8760,cm2m:52.56}, from=state.cvu&&CVF[state.cvu]?state.cvu:"m2y", to=e.target.value; if(from===to)return;
+  var CVF={m2y:1,m2h:8760,cm2m:52.56,cm2s:3153.6}, from=state.cvu&&CVF[state.cvu]?state.cvu:"m2y", to=e.target.value; if(from===to)return;
   var f=CVF[from]/CVF[to];
   state.layers.forEach(function(l){var v=num(l.cv); if(isFinite(v))l.cv=+(v*f).toPrecision(6);});
   state.cvu=to; tgSig=null; run(); caseToast("cv 單位已改為 "+CVU[to]+"，已輸入的 cv 已換算。");
