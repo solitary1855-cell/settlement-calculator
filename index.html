@@ -596,7 +596,7 @@ footer.notes p{margin:0 0 6px}
         <span><i class="lg-in"></i>影響深度以內 S(t)</span>
         <span><i class="lg-tq"></i>查詢時間 t（可直接左右拖曳）</span>
       </div>
-      <p class="hint" style="margin-top:8px">只計影響深度以內的沉陷。相連的壓密層自動歸為同一黏土層群組，排水路徑 Hdr 依整個黏土層厚度決定（雙向 = H/2、單向 = H），Sc 只計影響深度以內的部分；cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。cv 換算：1 m²/時 = 8,760 m²/年，1 cm²/分 = 52.56 m²/年，1 cm²/sec = 3,153.6 m²/年。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
+      <p class="hint" style="margin-top:8px">只計影響深度以內的沉陷。只取影響深度以內的壓密層，相連者自動歸為同一群組，深度範圍、厚度 H 與排水路徑 Hdr 皆以影響深度以內的土層計算（雙向 = H/2、單向 = H）；影響深度以外的土層不計；cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。cv 換算：1 m²/時 = 8,760 m²/年，1 cm²/分 = 52.56 m²/年，1 cm²/sec = 3,153.6 m²/年。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
     </section>
   </div>
 
@@ -1034,7 +1034,7 @@ function compute(s){
   /* ---- 壓密時間：相連壓密層歸為同一群組 ---- */
   var groups=[], cur=null;
   R.rows.forEach(function(r){
-    var isC=!r.skip&&!r.above&&r.o.m==="壓密";
+    var isC=!r.skip&&!r.above&&r.o.m==="壓密"&&(inf===null||r.d<=inf);
     if(isC){ if(!cur){cur={rows:[]};groups.push(cur);} cur.rows.push(r); } else cur=null;
   });
   var CVF={m2y:1,m2h:8760,cm2m:52.56,cm2s:3153.6}, cvf=CVF[s.cvu]||1;
@@ -1658,7 +1658,7 @@ function buildDocx(R,png,png2){
   if(T){
     body.push(para(sec[si++]+"、壓密時間",{style:"Heading1"}));
     ["依 Terzaghi 一維壓密理論：Tv = cv·t / Hdr²；U ≤ 60% 時 Tv = (π/4)·U²，U > 60% 時 Tv = 1.781 − 0.933·log(100 − U%)。",
-     "僅計影響深度以內之沉陷。相連之壓密層歸為同一黏土層群組，以整個黏土層厚度 H 決定排水路徑 Hdr（雙向排水 Hdr = H/2，單向排水 Hdr = H）；S(t) = Σ U_i(t)·Sc_i + 彈性沉陷（視為立即發生），Sc_i 為影響深度以內之壓密沉陷量。",
+     "僅計影響深度以內之沉陷。僅取影響深度以內之壓密層，相連者歸為同一群組，以群組厚度 H 決定排水路徑 Hdr（雙向排水 Hdr = H/2，單向排水 Hdr = H），影響深度以外之土層不計；S(t) = Σ U_i(t)·Sc_i + 彈性沉陷（視為立即發生），Sc_i 為影響深度以內之壓密沉陷量。",
      "假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。"
     ].forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,40],sz:20}));});
     var tr=[["群組","土層（影響深度內）","深度範圍 m","H m","排水","cv "+CVU[T.cvu],"Hdr m","Sc cm","t50 年","t90 年","U(t)","S(t) cm"]];
