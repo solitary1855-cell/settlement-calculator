@@ -297,6 +297,31 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 #tchart .t-qt{fill:var(--stress)}
 #tchart .t-dot{fill:var(--surface);stroke:var(--stress);stroke-width:2}
 .lg-in{border-color:var(--accent)!important}.lg-all{border-color:var(--ink)!important}.lg-tq{border-color:var(--stress)!important;border-top-style:dashed!important}
+.res th.col-h{width:124px;min-width:124px;text-align:center!important}
+.res td.colc{position:relative;width:124px;min-width:124px;padding:0;border-left:1px solid var(--ink);border-right:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.res tr:first-child td.colc{border-top:1px solid var(--ink)}
+.cc-壓密{background-color:var(--clay);background-image:repeating-linear-gradient(0deg,transparent 0 6px,var(--clay-ink) 6px 7px);background-size:14px 7px;background-blend-mode:normal}
+.cc-彈性{background-color:var(--sand);background-image:radial-gradient(var(--sand-ink) 1px,transparent 1.4px);background-size:7px 7px}
+.cc-不計{background-color:var(--hard);background-image:repeating-linear-gradient(45deg,var(--hard-ink) 0 1px,transparent 1px 9px)}
+.cc-bad{background:repeating-linear-gradient(45deg,var(--warn-soft) 0 6px,var(--surface) 6px 12px)}
+.colc .cc-d{position:absolute;left:3px;top:2px;font-family:var(--f-data);font-size:10.5px;line-height:1.2;color:var(--ink);background:var(--surface);padding:0 3px;border-radius:2px}
+.colc .cc-d.b{top:auto;bottom:2px}
+.colc .cc-q,.colc .cc-i{position:absolute;left:-1px;right:-1px;height:0;z-index:2}
+.colc .cc-q{border-top:2px dashed var(--ink)}
+.colc .cc-i{border-top:2.5px solid var(--stress)}
+.colc .cc-l{position:absolute;right:3px;bottom:2px;font-family:var(--f-body);font-size:10.5px;line-height:1.2;white-space:nowrap;background:var(--surface);padding:0 3px;border-radius:2px}
+.colc .cc-q .cc-l{color:var(--ink)}
+.colc .cc-i .cc-l{color:var(--stress);bottom:auto;top:2px}
+.colc .cc-w{position:absolute;right:4px;z-index:3;transform:translateY(-100%);font-size:11px;line-height:1;color:var(--accent);font-weight:700;background:var(--surface);padding:1px 3px;border-radius:2px}
+.lg-inf{border-color:var(--stress)!important;border-top-width:3px!important}
+.gwt-ic{color:var(--accent);font-size:12px}
+@media (max-width:640px){
+  .res tr{height:auto!important}
+  .res td.colc{grid-column:1/-1;height:14px;width:auto;min-width:0;border:0;border-radius:3px}
+  .res td.colc>*{display:none}
+  .res td.t-eq{white-space:normal;text-align:right}
+  .res th.col-h{display:none}
+}
 .res-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
 .res-key .k{display:inline-block;width:12px;height:12px;background:var(--accent-soft);border:1px solid var(--line);vertical-align:-2px;margin-right:4px}
 @media (max-width:640px){
@@ -523,27 +548,21 @@ footer.notes p{margin:0 0 6px}
   </section>
 
   <div class="grid-bot">
-    <section class="panel" aria-labelledby="h-prof">
-      <div class="panel-head"><h2 id="h-prof"><span class="n">04</span>地層柱狀與應力分佈</h2></div>
-      <div id="chart" role="img" aria-label="土層柱狀圖與有效覆土應力、應力增量隨深度分佈"></div>
-      <div class="legend">
-        <span><i class="lg-sv"></i>σ'v0</span>
-        <span><i class="lg-ds"></i>Δσ（2:1）</span>
-        <span><i class="lg-cr"></i>準則 × σ'v0</span>
-        <span><i class="lg-q"></i>荷重作用面</span>
-        <span><span class="swatch sw-壓密" style="height:10px"></span>壓密層</span>
-        <span><span class="swatch sw-彈性" style="height:10px"></span>彈性層</span>
-        <span><span class="swatch sw-不計" style="height:10px"></span>不計</span>
-      </div>
-    </section>
-
     <section class="panel" aria-labelledby="h-res">
-      <div class="panel-head"><h2 id="h-res"><span class="n">05</span>逐層計算</h2>
+      <div class="panel-head"><h2 id="h-res"><span class="n">04</span>地層柱狀與逐層計算</h2>
         <div class="btns"><button type="button" id="btn-copy">複製表格（可貼到 Excel）</button></div>
+      </div>
+      <div class="legend" style="margin:0 0 10px">
+        <span><span class="swatch cc-壓密" style="height:12px;width:18px"></span>壓密層</span>
+        <span><span class="swatch cc-彈性" style="height:12px;width:18px"></span>彈性層</span>
+        <span><span class="swatch cc-不計" style="height:12px;width:18px"></span>不計</span>
+        <span><i class="lg-q"></i>荷重作用面 Dq</span>
+        <span><i class="lg-inf"></i>影響深度</span>
+        <span><b class="gwt-ic">▽</b>地下水位</span>
       </div>
       <div class="tbl-scroll">
         <table class="res" id="res">
-          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>σ'1 <span data-u="P">t/m²</span></th><th>Δσ/σ'0</th><th>σ'c <span data-u="P">t/m²</span></th><th>壓密判定</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
+          <thead><tr><th class="col-h">地層柱狀</th><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>σ'1 <span data-u="P">t/m²</span></th><th>Δσ/σ'0</th><th>σ'c <span data-u="P">t/m²</span></th><th>壓密判定</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -553,7 +572,7 @@ footer.notes p{margin:0 0 6px}
     </section>
 
     <section class="panel" aria-labelledby="h-time">
-      <div class="panel-head"><h2 id="h-time"><span class="n">06</span>壓密時間</h2>
+      <div class="panel-head"><h2 id="h-time"><span class="n">05</span>壓密時間</h2>
         <div class="btns">
           <label class="tq" for="cvu">cv 單位 <select id="cvu"><option value="m2y">m²/年</option><option value="m2h">m²/時</option><option value="cm2m">cm²/分</option><option value="cm2s">cm²/sec</option></select></label>
           <label class="tq" for="tq">查詢時間 t <span class="inp"><input id="tq" data-k="tq" inputmode="decimal"><span class="u">年</span></span></label>
@@ -1145,11 +1164,20 @@ function renderTable(R){
   tb.innerHTML=""; tf.innerHTML="";
   if(!R.ok)return;
   var maxS=Math.max.apply(null,R.rows.map(function(r){return Math.abs(r.S||0);}).concat([1e-9]));
+  var nRows=R.rows.length;
+  function at(o,D,last){ if(D===null||D===undefined||!isFinite(D)||o.bad)return null; if(D>=o.top&&(D<o.bot||(last&&D<=o.bot)))return (D-o.top)/(o.bot-o.top)*100; return null; }
   R.rows.forEach(function(r,i){
     var tr=document.createElement("tr");
     if(r.above)tr.className="above"; else if(r.inside)tr.className="inside";
     var w=Math.round(Math.abs(r.S||0)/maxS*48);
-    tr.innerHTML='<td data-l="#">'+(i+1)+'</td><td class="t-name">'+esc(r.o.n)+'</td>'+
+    var o=r.o, th=(isFinite(o.bot)&&o.bot>o.top)?o.bot-o.top:0, last=i===nRows-1;
+    tr.style.height=Math.round(Math.min(150,Math.max(38,th*12)))+"px";
+    var col='<span class="cc-d">'+fmt(o.top,2)+'</span>'+(last&&!o.bad?'<span class="cc-d b">'+fmt(o.bot,2)+'</span>':"");
+    var pq=at(o,R.Dq,last); if(pq!==null)col+='<div class="cc-q" style="top:'+pq.toFixed(2)+'%"><span class="cc-l">Dq '+fmt(R.Dq,2)+' m</span></div>';
+    var pi=at(o,R.inf,last); if(pi!==null)col+='<div class="cc-i" style="top:'+pi.toFixed(2)+'%"><span class="cc-l">影響深度 '+fmt(R.inf,2)+' m</span></div>';
+    var pw=at(o,R.GW,last); if(pw!==null)col+='<span class="cc-w" style="top:'+pw.toFixed(2)+'%">▽ GWT</span>';
+    tr.innerHTML='<td class="colc '+(o.bad?"cc-bad":"cc-"+o.m)+'" aria-label="'+esc(o.n)+' '+fmt(o.top,2)+'～'+fmt(o.bot,2)+' m">'+col+'</td>'+
+      '<td data-l="#">'+(i+1)+'</td><td class="t-name">'+esc(r.o.n)+'</td>'+
       '<td data-l="H m">'+(r.skip?"—":fmt(r.H,2))+'</td>'+
       '<td data-l="中點 d m">'+(r.skip?"—":fmt(r.d,2))+'</td>'+
       '<td data-l="σ\'0 '+U().P+'">'+(r.skip?"—":fmt(r.s0,2))+'</td>'+
@@ -1164,7 +1192,7 @@ function renderTable(R){
     tb.appendChild(tr);
   });
   var f=document.createElement("tr");
-  f.innerHTML='<td colspan="10" style="text-align:right;font-family:var(--f-body)">影響深度以內 '+fmt(R.within,2)+' cm ／ 總沉陷量</td><td>'+fmt(R.total,2)+'</td><td></td><td></td>';
+  f.innerHTML='<td></td><td colspan="10" style="text-align:right;font-family:var(--f-body)">影響深度以內 '+fmt(R.within,2)+' cm ／ 總沉陷量</td><td>'+fmt(R.total,2)+'</td><td></td><td></td>';
   tf.appendChild(f);
 }
 
@@ -1409,13 +1437,36 @@ function svgString(R,W,Hh,exp){
   svg.push('</svg>');
   return svg.join("");
 }
+function columnSvg(R,W,H,exp){
+  var C={clay:"#b49770",clayI:"#7d6443",sand:"#e2cf9c",sandI:"#a8904f",hard:"#a9b2ae",hardI:"#76807c",ink:"#1b2427",mut:"#5a676b",acc:"#1d5f86",st:"#a2561c"};
+  var pad={t:30,b:20,l:56}, cx=pad.l, cw=170, maxD=R.maxD;
+  function y(d){return pad.t+d/maxD*(H-pad.t-pad.b);}
+  var o=['<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+W+'" height="'+H+'" fill="#ffffff"/>'];
+  o.push('<defs><pattern id="q-c" width="14" height="8" patternUnits="userSpaceOnUse"><rect width="14" height="8" fill="'+C.clay+'"/><path d="M1 4h8" stroke="'+C.clayI+'" stroke-width="1.2"/></pattern>'+
+    '<pattern id="q-s" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="'+C.sand+'"/><circle cx="2" cy="2" r="0.9" fill="'+C.sandI+'"/><circle cx="6" cy="6" r="0.9" fill="'+C.sandI+'"/></pattern>'+
+    '<pattern id="q-h" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="'+C.hard+'"/><path d="M0 10L10 0" stroke="'+C.hardI+'" stroke-width="1"/></pattern></defs>');
+  var fillOf={"壓密":"url(#q-c)","彈性":"url(#q-s)","不計":"url(#q-h)"};
+  o.push('<text x="'+(cx-8)+'" y="'+(pad.t-12)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.mut+'">深度 m</text>');
+  R.layers.forEach(function(l,i){ if(l.bad)return; var y1=y(l.top), y2=y(l.bot);
+    o.push('<rect x="'+cx+'" y="'+y1+'" width="'+cw+'" height="'+Math.max(0,y2-y1)+'" fill="'+fillOf[l.m]+'"/>');
+    o.push('<line x1="'+(cx-5)+'" x2="'+(cx+cw)+'" y1="'+y1+'" y2="'+y1+'" stroke="'+C.ink+'" stroke-width="1"/>');
+    o.push('<text x="'+(cx-8)+'" y="'+(y1+4)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.mut+'">'+fmt(l.top,2)+'</text>');
+    if(y2-y1>=15)o.push('<text x="'+(cx+cw+10)+'" y="'+((y1+y2)/2+4)+'" font-size="12.5" font-family="sans-serif" fill="'+C.ink+'">'+esc(l.n)+'（'+l.m+'）</text>');
+  });
+  o.push('<line x1="'+(cx-5)+'" x2="'+(cx+cw)+'" y1="'+y(maxD)+'" y2="'+y(maxD)+'" stroke="'+C.ink+'" stroke-width="1"/><text x="'+(cx-8)+'" y="'+(y(maxD)+4)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.mut+'">'+fmt(maxD,2)+'</text>');
+  o.push('<rect x="'+cx+'" y="'+pad.t+'" width="'+cw+'" height="'+(y(maxD)-pad.t)+'" fill="none" stroke="'+C.ink+'" stroke-width="1.2"/>');
+  if(isFinite(R.GW)&&R.GW<=maxD){var gy=y(R.GW); o.push('<path d="M'+(cx+cw-28)+' '+(gy-10)+'h14l-7 10z" fill="'+C.acc+'"/><text x="'+(cx+cw-10)+'" y="'+(gy-2)+'" font-size="11" font-family="sans-serif" fill="'+C.acc+'">GWT</text>');}
+  var qy=y(R.Dq); o.push('<line x1="'+(cx-5)+'" x2="'+(W-10)+'" y1="'+qy+'" y2="'+qy+'" stroke="'+C.ink+'" stroke-width="1.6" stroke-dasharray="8 4"/><text x="'+(W-12)+'" y="'+(qy-5)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.ink+'">荷重作用面 Dq = '+fmt(R.Dq,2)+' m</text>');
+  if(R.inf!==null){var iy=y(R.inf); o.push('<line x1="'+(cx-5)+'" x2="'+(W-10)+'" y1="'+iy+'" y2="'+iy+'" stroke="'+C.st+'" stroke-width="2"/><text x="'+(W-12)+'" y="'+(iy-5)+'" text-anchor="end" font-size="12" font-family="sans-serif" fill="'+C.st+'">影響深度 '+fmt(R.inf,2)+' m</text>');}
+  o.push('</svg>'); return o.join("");
+}
 function draw(R){
+  if(!chartEl)return;
   var W=Math.max(300,chartEl.clientWidth||600);
   if(!R.ok||!R.maxD){chartEl.innerHTML='<p class="hint">輸入完整的基礎與土層資料後顯示。</p>';return;}
   chartEl.innerHTML=svgString(R,W,W<520?420:480,false);
 }
-if(window.ResizeObserver){var rt=null; new ResizeObserver(function(){clearTimeout(rt);rt=setTimeout(function(){if(last)draw(last);},60);}).observe(chartEl);}
-else window.addEventListener("resize",function(){if(last)draw(last);});
+if(chartEl&&window.ResizeObserver){var rt=null; new ResizeObserver(function(){clearTimeout(rt);rt=setTimeout(function(){if(last)draw(last);},60);}).observe(chartEl);}
 
 /* ---------- copy ---------- */
 function summaryRows(R){
@@ -1594,10 +1645,10 @@ function buildDocx(R,png,png2){
       body.push(para("圖 1　影響深度以內沉陷量隨時間變化",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));}
   }
   if(png){
-    body.push(para(sec[si++]+"、地層柱狀與應力分佈",{style:"Heading1"}));
-    var cx=6120000, cy=Math.round(cx*png.h/png.w);
+    body.push(para(sec[si++]+"、地層柱狀",{style:"Heading1"}));
+    var cx=4320000, cy=Math.round(cx*png.h/png.w);
     body.push(imagePara("rIdImg1",cx,cy,1));
-    body.push(para("圖 "+(png2?"2":"1")+"　地層柱狀與應力分佈（σ'v0、2:1 應力增量 Δσ、準則線、荷重作用面與影響深度）",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));
+    body.push(para("圖 "+(png2?"2":"1")+"　地層柱狀（含荷重作用面、影響深度與地下水位）",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));
   }
   body.push(para(sec[si++]+"、備註",{style:"Heading1"}));
   ["本計算含主要壓密沉陷、彈性沉陷及壓密時間；未含次要壓密、樁身彈性縮短、鄰近基礎應力疊加及抽水降壓之影響。",
@@ -1631,9 +1682,9 @@ $("btn-word").addEventListener("click",function(){
   var R=last, b=$("btn-word");
   if(!R||!R.ok||!R.maxD){caseToast("請先輸入完整的基礎與土層資料。",true);return;}
   b.disabled=true; b.textContent="產生中…";
-  var W=900,H=540;
+  var W=640,H=620;
   var W2=900,H2=420, hasT=R.time&&(R.time.groups.length||R.time.SimmIn);
-  Promise.all([chartPng(R,W,H),hasT?chartPng(R,W2,H2,timeSvg):Promise.resolve(null)]).then(function(res){
+  Promise.all([chartPng(R,W,H,columnSvg),hasT?chartPng(R,W2,H2,timeSvg):Promise.resolve(null)]).then(function(res){
     var data=res[0], d2=res[1];
     var blob=buildDocx(R,data?{data:data,w:W,h:H}:null,d2?{data:d2,w:W2,h:H2}:null);
     download(blob,safeName(state.name)+"_沉陷計算書.docx");
