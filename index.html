@@ -245,6 +245,28 @@ body.is-dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .res tfoot td{font-weight:500;border-top:2px solid var(--ink);border-bottom:0}
 .sbar{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;width:100%}
 .sbar b{display:inline-block;height:6px;background:var(--accent);border-radius:1px;min-width:1px}
+.tq{display:flex;align-items:center;gap:8px;font-size:13px}
+.tq .inp{width:110px}
+.tsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px;margin-bottom:12px}
+.tsum div{border:1px solid var(--line);border-radius:4px;padding:8px 10px;min-width:0}
+.tsum div.first{border-color:var(--accent);background:var(--accent-soft)}
+.tsum b{display:block;font-family:var(--f-data);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.tsum span{font-size:12px;color:var(--muted)}
+.tg td input,.tg td select{width:88px;text-align:right}
+.tg td select{text-align:left}
+.tg td.t-name{white-space:normal;min-width:140px}
+.tg td.t-name::before{white-space:nowrap;margin-right:10px}
+#tchart{width:100%;min-height:300px;margin-top:12px}
+#tchart svg{display:block;width:100%;height:auto}
+#tchart text{font-family:var(--f-data);font-size:11px;fill:var(--muted)}
+#tchart .t-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 3;opacity:.8}
+#tchart .t-axis{stroke:var(--line);stroke-width:1}
+#tchart .t-all{fill:none;stroke:var(--ink);stroke-width:2}
+#tchart .t-in{fill:none;stroke:var(--accent);stroke-width:2.2}
+#tchart .t-q{stroke:var(--stress);stroke-width:1.5;stroke-dasharray:6 4}
+#tchart .t-qt{fill:var(--stress)}
+#tchart .t-dot{fill:var(--surface);stroke:var(--stress);stroke-width:2}
+.lg-in{border-color:var(--accent)!important}.lg-all{border-color:var(--ink)!important}.lg-tq{border-color:var(--stress)!important;border-top-style:dashed!important}
 .res-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
 .res-key .k{display:inline-block;width:12px;height:12px;background:var(--accent-soft);border:1px solid var(--line);vertical-align:-2px;margin-right:4px}
 @media (max-width:640px){
@@ -498,6 +520,26 @@ footer.notes p{margin:0 0 6px}
       <div class="res-key"><span><span class="k"></span>尚未達影響深度準則的計算層</span><span class="toast" id="toast"></span></div>
       <textarea id="copybuf" aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;top:0;width:1px;height:1px"></textarea>
     </section>
+
+    <section class="panel" aria-labelledby="h-time">
+      <div class="panel-head"><h2 id="h-time"><span class="n">06</span>壓密時間</h2>
+        <label class="tq" for="tq">查詢時間 t <span class="inp"><input id="tq" data-k="tq" inputmode="decimal"><span class="u">年</span></span></label>
+      </div>
+      <div class="tsum" id="tsum"></div>
+      <div class="tbl-scroll">
+        <table class="res tg" id="tg">
+          <thead><tr><th>群組</th><th>土層</th><th>深度範圍 m</th><th>H m</th><th>排水條件</th><th>cv m²/年</th><th>Hdr m</th><th>Sc cm</th><th>t50 年</th><th>t90 年</th><th>U(t)</th><th>S(t) cm</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="tchart" role="img" aria-label="沉陷量隨時間變化曲線"></div>
+      <div class="legend">
+        <span><i class="lg-all"></i>總沉陷量 S(t)</span>
+        <span><i class="lg-in"></i>影響深度以內 S(t)</span>
+        <span><i class="lg-tq"></i>查詢時間 t</span>
+      </div>
+      <p class="hint" style="margin-top:8px">相連的壓密層自動歸為同一黏土層群組，以群組總厚度決定排水路徑 Hdr（雙向 = H/2、單向 = H），cv 與排水條件以群組輸入。彈性層沉陷視為加載後立即發生。Tv = cv·t / Hdr²；U ≤ 60%：Tv = (π/4)U²；U &gt; 60%：Tv = 1.781 − 0.933·log(100 − U%)。假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。</p>
+    </section>
   </div>
 
   <footer class="notes">
@@ -518,7 +560,7 @@ footer.notes p{margin:0 0 6px}
     </div>
     <div>
       <h3>使用限制</h3>
-      <p>僅計最終主壓密與彈性沉陷，未含時間效應、次要壓密、樁身彈性縮短、鄰房疊加與抽水降壓。1 t = 9.81 kN。</p>
+      <p>壓密時間依 Terzaghi 一維壓密理論（初始超額孔隙水壓均勻分佈、瞬時加載）。未含次要壓密、樁身彈性縮短、鄰房疊加與抽水降壓。1 t = 9.81 kN。</p>
       <p>案件與輸入只存在這台裝置的瀏覽器中，不會上傳；請定期匯出備份檔。正式設計請依《建築物基礎構造設計規範》辦理。</p>
     </div>
   </footer>
@@ -528,19 +570,19 @@ footer.notes p{margin:0 0 6px}
 (function(){
 "use strict";
 var DRAFT="settle-calc-t-v1", CASES="settle-cases-v1";
-var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:9,qIsPressure:true,wf:1.5,qx:0.5,qpre:0,deduct:true,crit:0.1,layers:[
+var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:9,qIsPressure:true,wf:1.5,qx:0.5,qpre:0,deduct:true,crit:0.1,tq:1,layers:[
  {n:"回填層",bot:3,gt:1.8,gs:1.9,m:"不計"},
- {n:"軟弱粉土質黏土 (1)",bot:6,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
- {n:"軟弱粉土質黏土 (2)",bot:9,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
- {n:"軟弱粉土質黏土 (3)",bot:12,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
+ {n:"軟弱粉土質黏土 (1)",bot:6,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2,cv:2,dr:"雙向"},
+ {n:"軟弱粉土質黏土 (2)",bot:9,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2,cv:2,dr:"雙向"},
+ {n:"軟弱粉土質黏土 (3)",bot:12,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2,cv:2,dr:"雙向"},
  {n:"粉土質細砂 (1)",bot:15,gt:1.9,gs:1.95,m:"彈性",M:2500},
  {n:"粉土質細砂 (2)",bot:18,gt:1.9,gs:1.95,m:"彈性",M:3000},
- {n:"黏土 (1)",bot:22,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0},
- {n:"黏土 (2)",bot:26,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0},
- {n:"黏土 (3)",bot:30,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0},
+ {n:"黏土 (1)",bot:22,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0,cv:3,dr:"雙向"},
+ {n:"黏土 (2)",bot:26,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0,cv:3,dr:"雙向"},
+ {n:"黏土 (3)",bot:30,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0,cv:3,dr:"雙向"},
  {n:"卵礫石層",bot:40,gt:2.1,gs:2.15,m:"不計"}
 ]};
-var FIX=["B","L","Df","Dq","GW","gw","Q","wf","qx","qpre","crit"];
+var FIX=["B","L","Df","Dq","GW","gw","Q","wf","qx","qpre","crit","tq"];
 var LCOLS=[
  {k:"bot",l:"底深 m"},{k:"gt",l:"γt 水位上",u:"G"},{k:"gs",l:"γsat 水位下",u:"G"},{k:"m",l:"計算方法",sel:1},
  {k:"e0",l:"e0",on:["壓密"]},{k:"cc",l:"Cc",on:["壓密"]},{k:"cr",l:"Cs",on:["壓密"]},{k:"ocr",l:"OCR 選填",on:["壓密"]},
@@ -563,7 +605,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){storageO
 function normalize(s){
   if(!s||!Array.isArray(s.layers))return null;
   var o=clone(EXAMPLE); Object.keys(o).forEach(function(k){if(s[k]!==undefined)o[k]=s[k];});
-  o.layers=s.layers.map(function(l){return {n:l.n||"",bot:l.bot,gt:l.gt,gs:l.gs,m:(["壓密","彈性","不計"].indexOf(l.m)>=0?l.m:"壓密"),e0:l.e0,cc:l.cc,cr:l.cr,ocr:l.ocr,sp:l.sp,M:l.M};});
+  o.layers=s.layers.map(function(l){return {n:l.n||"",bot:l.bot,gt:l.gt,gs:l.gs,m:(["壓密","彈性","不計"].indexOf(l.m)>=0?l.m:"壓密"),e0:l.e0,cc:l.cc,cr:l.cr,ocr:l.ocr,sp:l.sp,M:l.M,cv:l.cv,dr:(l.dr==="單向"?"單向":"雙向")};});
   if(typeof o.name!=="string")o.name="";
   /* 舊版 Q 以總載重（t 或 kN）輸入，換算為均布壓力 */
   if(s.qIsPressure!==true){var qb=num(o.B),ql=num(o.L),qq=num(o.Q); if(isFinite(qq)&&qb>0&&ql>0)o.Q=Math.round(qq/(qb*ql)*10000)/10000;}
@@ -840,6 +882,12 @@ tbody.addEventListener("keydown",function(e){
   if(moveLayer(i,to)){buildLayers();run();tbody.children[to].querySelector("[data-drag]").focus();}
 });
 
+/* ---------- consolidation degree ---------- */
+function Uof(Tv){
+  if(!(Tv>0))return 0;
+  if(Tv<=0.2827)return Math.sqrt(4*Tv/Math.PI);
+  return Math.min(1,1-Math.pow(10,(1.781-Tv)/0.933)/100);
+}
 /* ---------- calculation ---------- */
 function compute(s){
   var B=num(s.B),L=num(s.L),Df=num(s.Df),Dq=num(s.Dq),GW=num(s.GW),gw=num(s.gw),Q=num(s.Q),wf=num(s.wf),qx=num(s.qx),qpre=num(s.qpre),crit=num(s.crit);
@@ -925,12 +973,52 @@ function compute(s){
   if(R.qn<=0)R.alerts.push("淨壓力 ≤ 0（過補償），沉陷由回脹後再壓縮控制，請另以開挖卸載量檢核。");
   if(inf===null&&good.length)R.alerts.push("已輸入的土層範圍內未達影響深度準則，請補充更深的地層資料。");
   else if(R.share>0.1)R.alerts.push("影響深度以下仍有 "+(R.share*100).toFixed(1)+"% 的沉陷（下方有軟弱層），設計應採總沉陷量（全部計算層）。");
+  /* ---- 壓密時間：相連壓密層歸為同一群組 ---- */
+  var groups=[], cur=null;
+  R.rows.forEach(function(r){
+    var isC=!r.skip&&!r.above&&r.o.m==="壓密";
+    if(isC){ if(!cur){cur={rows:[]};groups.push(cur);} cur.rows.push(r); } else cur=null;
+  });
+  var Simm=0, SimmIn=0;
+  R.rows.forEach(function(r){ if(!r.skip&&!r.above&&r.o.m!=="壓密"){ Simm+=r.S||0; if(inf===null||r.d<=inf)SimmIn+=r.S||0; } });
+  groups.forEach(function(g,gi){
+    var f=g.rows[0], lyr=s.layers[f.o.i]||{};
+    g.no=gi+1; g.i0=f.o.i; g.idx=g.rows.map(function(r){return r.o.i;});
+    g.top=Math.max(f.o.top,Dq); g.bot=g.rows[g.rows.length-1].o.bot;
+    g.H=g.rows.reduce(function(t,r){return t+r.H;},0);
+    g.dr=lyr.dr==="單向"?"單向":"雙向"; g.cv=num(lyr.cv);
+    g.Hdr=g.dr==="單向"?g.H:g.H/2;
+    g.S=g.rows.reduce(function(t,r){return t+(r.S||0);},0);
+    g.Sin=g.rows.reduce(function(t,r){return t+((inf===null||r.d<=inf)?(r.S||0):0);},0);
+    g.ok=g.cv>0&&g.Hdr>0;
+    if(g.ok){g.t50=0.197*g.Hdr*g.Hdr/g.cv; g.t90=0.848*g.Hdr*g.Hdr/g.cv;}
+    g.names=g.rows.map(function(r){return r.o.n;});
+  });
+  var bad=groups.filter(function(g){return !g.ok;});
+  if(bad.length)R.alerts.push("壓密時間：群組 "+bad.map(function(g){return g.no;}).join("、")+" 未填 cv，時間曲線中視為立即完成。");
+  function S_at(t,within){
+    var v=within?SimmIn:Simm;
+    groups.forEach(function(g){ var u=g.ok?Uof(g.cv*t/(g.Hdr*g.Hdr)):1; v+=(within?g.Sin:g.S)*u; });
+    return v;
+  }
+  var tq=num(s.tq); if(!(tq>0))tq=1;
+  R.time={groups:groups,Simm:Simm,SimmIn:SimmIn,S_at:S_at,tq:tq,Sq:S_at(tq,false),SqIn:S_at(tq,true)};
+  var Scons=groups.reduce(function(t,g){return t+g.S;},0);
+  R.time.Scons=Scons;
+  R.time.Uq=Scons!==0?(R.time.Sq-Simm)/Scons:1;
+  function tFor(frac){
+    var target=Simm+frac*Scons; if(Scons<=0)return 0;
+    var lo=1e-5, hi=1e5; if(S_at(hi,false)<target-1e-9)return Infinity;
+    for(var k=0;k<80;k++){var mid=Math.sqrt(lo*hi); if(S_at(mid,false)<target)lo=mid; else hi=mid;}
+    return hi;
+  }
+  R.time.t50all=tFor(0.5); R.time.t90all=tFor(0.9);
   R.ok=true; return R;
 }
 
 /* ---------- render ---------- */
 var last=null;
-function run(){saveDraft(); updateSaveChip(); var R=compute(state); last=R; renderSummary(R); renderTops(R); renderTable(R); draw(R); eqCalc();}
+function run(){saveDraft(); updateSaveChip(); var R=compute(state); last=R; renderSummary(R); renderTops(R); renderTable(R); draw(R); renderTime(R); eqCalc();}
 function renderTops(R){
   state.layers.forEach(function(ly,i){
     var el=$("ly"+i+"-top"); if(!el)return;
@@ -981,6 +1069,108 @@ function renderTable(R){
   f.innerHTML='<td colspan="10" style="text-align:right;font-family:var(--f-body)">影響深度以內 '+fmt(R.within,2)+' cm ／ 總沉陷量</td><td>'+fmt(R.total,2)+'</td><td></td><td></td>';
   tf.appendChild(f);
 }
+
+/* ---------- consolidation time ---------- */
+var tgBody=document.querySelector("#tg tbody"), tgSig=null;
+function fy(t){if(!isFinite(t))return "—"; if(t<0.1)return fmt(t,3); if(t<10)return fmt(t,2); return fmt(t,1);}
+function renderTime(R){
+  var tsum=$("tsum");
+  if(!R.ok||!R.time){tsum.innerHTML="";tgBody.innerHTML="";tgSig=null;$("tchart").innerHTML="";return;}
+  var T=R.time;
+  tsum.innerHTML='<div class="first"><span>t = '+fy(T.tq)+' 年　影響深度以內 S(t)</span><b>'+fmt(T.SqIn,2)+' cm</b></div>'+
+    '<div><span>t = '+fy(T.tq)+' 年　總沉陷量 S(t)</span><b>'+fmt(T.Sq,2)+' cm</b></div>'+
+    '<div><span>壓密沉陷完成度 U(t)</span><b>'+(T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—")+'</b></div>'+
+    '<div><span>壓密沉陷達 50%／90% 所需時間</span><b>'+fy(T.t50all)+'／'+fy(T.t90all)+' 年</b></div>';
+  var sig=T.groups.map(function(g){return g.idx.join(",");}).join("|");
+  if(sig!==tgSig){
+    tgSig=sig; tgBody.innerHTML="";
+    if(!T.groups.length){tgBody.innerHTML='<tr><td colspan="12" style="text-align:left;font-family:var(--f-body)">荷重作用面以下沒有壓密層。</td></tr>';}
+    T.groups.forEach(function(g){
+      var tr=document.createElement("tr"); tr.dataset.idx=g.idx.join(",");
+      tr.innerHTML='<td data-l="群組">'+g.no+'</td><td class="t-name" data-l="土層"></td><td data-l="深度範圍 m" class="g-rng"></td><td data-l="H m" class="g-H"></td>'+
+        '<td data-l="排水條件"><select data-g="dr" aria-label="群組'+g.no+'排水條件"><option>雙向</option><option>單向</option></select></td>'+
+        '<td data-l="cv m²/年"><input data-g="cv" inputmode="decimal" aria-label="群組'+g.no+' cv"></td>'+
+        '<td data-l="Hdr m" class="g-Hdr"></td><td data-l="Sc cm" class="g-S"></td><td data-l="t50 年" class="g-t50"></td><td data-l="t90 年" class="g-t90"></td><td data-l="U(t)" class="g-U"></td><td data-l="S(t) cm" class="g-St"></td>';
+      tgBody.appendChild(tr);
+      var ly=state.layers[g.i0]||{};
+      tr.querySelector('[data-g=dr]').value=ly.dr==="單向"?"單向":"雙向";
+      tr.querySelector('[data-g=cv]').value=(ly.cv===undefined||ly.cv===null)?"":ly.cv;
+    });
+  }
+  T.groups.forEach(function(g,k){
+    var tr=tgBody.children[k]; if(!tr)return;
+    var u=g.ok?Uof(g.cv*T.tq/(g.Hdr*g.Hdr)):1;
+    tr.querySelector(".t-name").textContent=g.names.join("、");
+    tr.querySelector(".g-rng").textContent=fmt(g.top,2)+"～"+fmt(g.bot,2);
+    tr.querySelector(".g-H").textContent=fmt(g.H,2);
+    tr.querySelector(".g-Hdr").textContent=fmt(g.Hdr,2);
+    tr.querySelector(".g-S").textContent=fmt(g.S,2);
+    tr.querySelector(".g-t50").textContent=g.ok?fy(g.t50):"—";
+    tr.querySelector(".g-t90").textContent=g.ok?fy(g.t90):"—";
+    tr.querySelector(".g-U").textContent=g.ok?(u*100).toFixed(1)+"%":"—";
+    tr.querySelector(".g-St").textContent=fmt(g.S*u,2);
+    tr.querySelector('[data-g=cv]').classList.toggle("bad",!g.ok);
+  });
+  drawTime(R);
+}
+tgBody.addEventListener("input",function(e){
+  var t=e.target; if(t.dataset.g!=="cv")return;
+  var idx=t.closest("tr").dataset.idx.split(",").map(Number), v=t.value===""?"":num(t.value);
+  idx.forEach(function(i){if(state.layers[i])state.layers[i].cv=v;}); run();
+});
+tgBody.addEventListener("change",function(e){
+  var t=e.target; if(t.dataset.g!=="dr")return;
+  var idx=t.closest("tr").dataset.idx.split(",").map(Number);
+  idx.forEach(function(i){if(state.layers[i])state.layers[i].dr=t.value;}); run();
+});
+var EXPT={"t-grid":'stroke="#cdd5d1" stroke-width="1" stroke-dasharray="2 3"',"t-axis":'stroke="#9aa5a1" stroke-width="1"',
+  "t-all":'fill="none" stroke="#1b2427" stroke-width="2"',"t-in":'fill="none" stroke="#1d5f86" stroke-width="2.2"',
+  "t-q":'stroke="#a2561c" stroke-width="1.5" stroke-dasharray="6 4"',"t-qt":'fill="#a2561c" font-size="12" font-family="sans-serif"',
+  "t-dot":'fill="#ffffff" stroke="#a2561c" stroke-width="2"',"tx":'fill="#5a676b" font-size="12" font-family="sans-serif"'};
+function timeSvg(R,W,H,exp){
+  var T=R.time; function A(c){return exp?(EXPT[c]||""):'class="'+c+'"';} function TX(c){return exp?EXPT[c||"tx"]:(c?'class="'+c+'"':"");}
+  var tmax=1; T.groups.forEach(function(g){if(g.ok)tmax=Math.max(tmax,2.0*g.Hdr*g.Hdr/g.cv);}); tmax=Math.max(tmax,T.tq*1.5);
+  var tmin=tmax; T.groups.forEach(function(g){if(g.ok)tmin=Math.min(tmin,0.005*g.Hdr*g.Hdr/g.cv);}); tmin=Math.min(tmin,T.tq/3,0.1);
+  var d0=Math.floor(Math.log10(tmin)), d1=Math.ceil(Math.log10(tmax)); if(d1-d0<2)d0=d1-2;
+  var pad={t:22,r:16,b:40,l:58};
+  function xs(t){return pad.l+(Math.log10(t)-d0)/(d1-d0)*(W-pad.l-pad.r);}
+  var smax=Math.max(T.S_at(Math.pow(10,d1),false),T.S_at(Math.pow(10,d1),true),0.01);
+  var yN=nice(smax,5);
+  function ys(v){return pad.t+Math.max(0,v)/yN.max*(H-pad.t-pad.b);}
+  var o=['<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg">'];
+  if(exp)o.push('<rect width="'+W+'" height="'+H+'" fill="#ffffff"/>');
+  for(var d=d0;d<=d1;d++){
+    var X=xs(Math.pow(10,d)); o.push('<line '+A("t-grid")+' x1="'+X+'" x2="'+X+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
+    o.push('<text '+TX()+' x="'+X+'" y="'+(H-pad.b+16)+'" text-anchor="middle">'+(+Math.pow(10,d).toPrecision(1))+'</text>');
+  }
+  o.push('<text '+TX()+' x="'+(W-pad.r)+'" y="'+(H-6)+'" text-anchor="end">時間 t（年，對數尺度）</text>');
+  for(var v=0;v<=yN.max+1e-9;v+=yN.step){
+    var Y=ys(v); o.push('<line '+A("t-grid")+' x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+Y+'" y2="'+Y+'"/>');
+    o.push('<text '+TX()+' x="'+(pad.l-6)+'" y="'+(Y+4)+'" text-anchor="end">'+(+v.toFixed(2))+'</text>');
+  }
+  o.push('<text '+TX()+' x="'+(pad.l-6)+'" y="'+(pad.t-8)+'" text-anchor="end">S cm</text>');
+  o.push('<line '+A("t-axis")+' x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+pad.t+'" y2="'+pad.t+'"/><line '+A("t-axis")+' x1="'+pad.l+'" x2="'+pad.l+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
+  function path(within){var p="",N=140; for(var k=0;k<=N;k++){var t=Math.pow(10,d0+(d1-d0)*k/N); p+=(k?"L":"M")+xs(t).toFixed(1)+" "+ys(T.S_at(t,within)).toFixed(1);} return p;}
+  o.push('<path '+A("t-all")+' d="'+path(false)+'"/>');
+  o.push('<path '+A("t-in")+' d="'+path(true)+'"/>');
+  if(T.tq>=Math.pow(10,d0)&&T.tq<=Math.pow(10,d1)){
+    var qx=xs(T.tq); o.push('<line '+A("t-q")+' x1="'+qx+'" x2="'+qx+'" y1="'+pad.t+'" y2="'+(H-pad.b)+'"/>');
+    o.push('<circle '+A("t-dot")+' r="4" cx="'+qx+'" cy="'+ys(T.Sq)+'"/><circle '+A("t-dot")+' r="4" cx="'+qx+'" cy="'+ys(T.SqIn)+'"/>');
+    var right=qx>W*0.5; o.push('<text '+TX("t-qt")+' x="'+(qx+(right?-6:6))+'" y="'+(H-pad.b-8)+'" text-anchor="'+(right?"end":"start")+'">t = '+fy(T.tq)+' 年：'+fmt(T.SqIn,2)+'／'+fmt(T.Sq,2)+' cm</text>');
+  }
+  if(exp){
+    var lx=pad.l+8, ly=H-pad.b-30;
+    o.push('<line x1="'+lx+'" x2="'+(lx+20)+'" y1="'+ly+'" y2="'+ly+'" '+EXPT["t-all"]+'/><text '+EXPT.tx+' x="'+(lx+24)+'" y="'+(ly+4)+'">總沉陷量</text>');
+    o.push('<line x1="'+(lx+100)+'" x2="'+(lx+120)+'" y1="'+ly+'" y2="'+ly+'" '+EXPT["t-in"]+'/><text '+EXPT.tx+' x="'+(lx+124)+'" y="'+(ly+4)+'">影響深度以內</text>');
+  }
+  o.push('</svg>'); return o.join("");
+}
+function drawTime(R){
+  var el=$("tchart"), W=Math.max(300,el.clientWidth||600);
+  if(!R.ok||!R.time||(!R.time.groups.length&&!R.time.Simm)){el.innerHTML='<p class="hint">荷重作用面以下沒有可計算的沉陷層。</p>';return;}
+  el.innerHTML=timeSvg(R,W,W<520?300:340,false);
+}
+if(window.ResizeObserver){var rt2=null; new ResizeObserver(function(){clearTimeout(rt2);rt2=setTimeout(function(){if(last&&last.ok)drawTime(last);},60);}).observe($("tchart"));}
 
 /* ---------- chart ---------- */
 var chartEl=$("chart");
@@ -1103,6 +1293,13 @@ $("btn-copy").addEventListener("click",function(){
   R.rows.forEach(function(r,i){
     L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.s1===undefined?"":fmt(r.s1,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),r.spSrc||"",r.state||"",eqLabel(r)==="—"?"":eqLabel(r),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
   });
+  if(R.time&&R.time.groups.length){
+    L.push(""); L.push(["壓密時間（查詢時間 t = "+fy(R.time.tq)+" 年）"].join("\t"));
+    L.push(["群組","土層","深度範圍 m","H m","排水","cv m²/年","Hdr m","Sc cm","t50 年","t90 年","U(t)","S(t) cm"].join("\t"));
+    R.time.groups.forEach(function(g){var u=g.ok?Uof(g.cv*R.time.tq/(g.Hdr*g.Hdr)):1;
+      L.push([g.no,g.names.join("、"),fmt(g.top,2)+"～"+fmt(g.bot,2),fmt(g.H,2),g.dr,g.ok?fmt(g.cv,3):"",fmt(g.Hdr,2),fmt(g.S,3),g.ok?fy(g.t50):"",g.ok?fy(g.t90):"",g.ok?(u*100).toFixed(1)+"%":"",fmt(g.S*u,3)].join("\t"));});
+    L.push(["影響深度以內 S(t)",fmt(R.time.SqIn,3),"cm"].join("\t")); L.push(["總沉陷量 S(t)",fmt(R.time.Sq,3),"cm"].join("\t"));
+  }
   var txt=L.join("\n"), toast=$("toast");
   function fallback(){var ta=$("copybuf"); ta.value=txt; ta.select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){} toast.textContent=ok?"已複製，可直接貼到 Excel。":"無法自動複製，請改用手動選取表格內容。";}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast.textContent="已複製，可直接貼到 Excel。";},fallback);}
@@ -1157,13 +1354,14 @@ function table(widths,rows,o){
   });
   return s+"</w:tbl>";
 }
-function imagePara(rid,cx,cy){
-  return '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="60" w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="1" name="profile"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="profile.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rid+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+function imagePara(rid,cx,cy,pid){
+  pid=pid||1;
+  return '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="60" w:after="60"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="'+pid+'" name="fig'+pid+'"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="'+pid+'" name="fig'+pid+'.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rid+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
 }
-function chartPng(R,W,H){
+function chartPng(R,W,H,fn){
   return new Promise(function(resolve){
     try{
-      var svg=svgString(R,W,H,true), img=new Image(), scale=2;
+      var svg=(fn||svgString)(R,W,H,true), img=new Image(), scale=2;
       var url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}));
       img.onload=function(){
         try{
@@ -1178,7 +1376,7 @@ function chartPng(R,W,H){
     }catch(e){resolve(null);}
   });
 }
-function buildDocx(R,png){
+function buildDocx(R,png,png2){
   var W=9638, body=[], today=stamp(Date.now()).slice(0,10);
   body.push(para("土壤沉陷量計算書",{style:"Title"}));
   body.push(para([{t:"案件名稱："},{t:state.name||"（未命名）",b:true}],{jc:"center",sp:[0,0]}));
@@ -1239,14 +1437,31 @@ function buildDocx(R,png){
   body.push(para("判讀：",{b:true,sp:[120,0]}));
   (R.alerts.length?R.alerts:["影響深度以下的沉陷貢獻小，計算至影響深度即可。"]).forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,0]}));});
 
-  if(png){
-    body.push(para("六、地層柱狀與應力分佈",{style:"Heading1"}));
-    var cx=6120000, cy=Math.round(cx*png.h/png.w);
-    body.push(imagePara("rIdImg1",cx,cy));
-    body.push(para("圖 1　地層柱狀與應力分佈（σ'v0、2:1 應力增量 Δσ、準則線、荷重作用面與影響深度）",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));
+  /* 六、壓密時間 */
+  var T=R.time, sec=["六","七","八","九"], si=0;
+  if(T){
+    body.push(para(sec[si++]+"、壓密時間",{style:"Heading1"}));
+    ["依 Terzaghi 一維壓密理論：Tv = cv·t / Hdr²；U ≤ 60% 時 Tv = (π/4)·U²，U > 60% 時 Tv = 1.781 − 0.933·log(100 − U%)。",
+     "相連之壓密層歸為同一黏土層群組，以群組總厚度 H 決定排水路徑 Hdr（雙向排水 Hdr = H/2，單向排水 Hdr = H）；S(t) = Σ U_i(t)·Sc_i + 彈性沉陷（視為立即發生）。",
+     "假設初始超額孔隙水壓沿深度均勻分佈、荷重瞬時施加。"
+    ].forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,40],sz:20}));});
+    var tr=[["群組","土層","深度範圍 m","H m","排水","cv m²/年","Hdr m","Sc cm","t50 年","t90 年","U(t)","S(t) cm"]];
+    T.groups.forEach(function(g){var u=g.ok?Uof(g.cv*T.tq/(g.Hdr*g.Hdr)):1;
+      tr.push([g.no,{t:g.names.join("、"),jc:"left"},fmt(g.top,2)+"～"+fmt(g.bot,2),fmt(g.H,2),g.dr,g.ok?fmt(g.cv,2):"未填",fmt(g.Hdr,2),fmt(g.S,2),g.ok?fy(g.t50):"—",g.ok?fy(g.t90):"—",g.ok?(u*100).toFixed(1)+"%":"—",fmt(g.S*u,2)]);});
+    if(T.groups.length)body.push(table([480,1958,900,600,560,700,640,680,680,680,640,1120],tr,{sz:16}));
+    body.push(para("查詢時間 t = "+fy(T.tq)+" 年：影響深度以內 S(t) = "+fmt(T.SqIn,2)+" cm，總沉陷量 S(t) = "+fmt(T.Sq,2)+" cm，壓密沉陷完成度 U = "+(T.Scons!==0?(T.Uq*100).toFixed(1)+"%":"—")+"。",{sp:[120,40]}));
+    body.push(para("壓密沉陷達 50% 所需時間約 "+fy(T.t50all)+" 年；達 90% 約 "+fy(T.t90all)+" 年。",{sp:[0,60]}));
+    if(png2){var cx2=6120000, cy2=Math.round(cx2*png2.h/png2.w); body.push(imagePara("rIdImg2",cx2,cy2,2));
+      body.push(para("圖 1　沉陷量隨時間變化（總沉陷量與影響深度以內）",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));}
   }
-  body.push(para((png?"七":"六")+"、備註",{style:"Heading1"}));
-  ["本計算僅含最終主要壓密沉陷與彈性沉陷，未含壓密時間效應、次要壓密、樁身彈性縮短、鄰近基礎應力疊加及抽水降壓之影響。",
+  if(png){
+    body.push(para(sec[si++]+"、地層柱狀與應力分佈",{style:"Heading1"}));
+    var cx=6120000, cy=Math.round(cx*png.h/png.w);
+    body.push(imagePara("rIdImg1",cx,cy,1));
+    body.push(para("圖 "+(png2?"2":"1")+"　地層柱狀與應力分佈（σ'v0、2:1 應力增量 Δσ、準則線、荷重作用面與影響深度）",{jc:"center",sz:18,color:"5A676B",sp:[0,120]}));
+  }
+  body.push(para(sec[si++]+"、備註",{style:"Heading1"}));
+  ["本計算含主要壓密沉陷、彈性沉陷及壓密時間；未含次要壓密、樁身彈性縮短、鄰近基礎應力疊加及抽水降壓之影響。",
    "2:1 應力分佈法為近似解；附加應力為柔性載重之平均估算值。",
    "壓密未完成土壤（σ'c < σ'0）依式(解 4.4-8) 自 σ'c 起算，已包含土層在自重下尚未完成之壓密量；淨卸載（Δσ < 0）時以 Cs 計回脹，非規範圖-解 4.4-3 涵蓋範圍。",
    "本計算書由土壤沉陷量計算器產生，供工程初估與檢核使用；正式設計請依《建築物基礎構造設計規範》及相關規定辦理。"
@@ -1263,13 +1478,14 @@ function buildDocx(R,png){
     '</w:styles>';
   var footer='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr '+W_NS+'><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr><w:r><w:t xml:space="preserve">'+x((state.name||"土壤沉陷量計算書"))+'　第 </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:t xml:space="preserve"> 頁</w:t></w:r></w:p></w:ftr>';
   var REL="http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
-  var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="'+REL+'styles" Target="styles.xml"/><Relationship Id="rIdFtr" Type="'+REL+'footer" Target="footer1.xml"/>'+(png?'<Relationship Id="rIdImg1" Type="'+REL+'image" Target="media/image1.png"/>':"")+'</Relationships>';
+  var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="'+REL+'styles" Target="styles.xml"/><Relationship Id="rIdFtr" Type="'+REL+'footer" Target="footer1.xml"/>'+(png?'<Relationship Id="rIdImg1" Type="'+REL+'image" Target="media/image1.png"/>':"")+(png2?'<Relationship Id="rIdImg2" Type="'+REL+'image" Target="media/image2.png"/>':"")+'</Relationships>';
   var ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>';
   var root='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+REL+'officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>';
   var iso=new Date().toISOString().replace(/\.\d+Z$/,"Z");
   var core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+x("土壤沉陷量計算書 "+(state.name||""))+'</dc:title><dc:creator>土壤沉陷量計算器</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+iso+'</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">'+iso+'</dcterms:modified></cp:coreProperties>';
   var files=[{name:"[Content_Types].xml",data:ct},{name:"_rels/.rels",data:root},{name:"docProps/core.xml",data:core},{name:"word/document.xml",data:doc},{name:"word/styles.xml",data:styles},{name:"word/footer1.xml",data:footer},{name:"word/_rels/document.xml.rels",data:rels}];
   if(png)files.push({name:"word/media/image1.png",data:png.data});
+  if(png2)files.push({name:"word/media/image2.png",data:png2.data});
   return zip(files);
 }
 $("btn-word").addEventListener("click",function(){
@@ -1277,8 +1493,10 @@ $("btn-word").addEventListener("click",function(){
   if(!R||!R.ok||!R.maxD){caseToast("請先輸入完整的基礎與土層資料。",true);return;}
   b.disabled=true; b.textContent="產生中…";
   var W=900,H=540;
-  chartPng(R,W,H).then(function(data){
-    var blob=buildDocx(R,data?{data:data,w:W,h:H}:null);
+  var W2=900,H2=420, hasT=R.time&&(R.time.groups.length||R.time.Simm);
+  Promise.all([chartPng(R,W,H),hasT?chartPng(R,W2,H2,timeSvg):Promise.resolve(null)]).then(function(res){
+    var data=res[0], d2=res[1];
+    var blob=buildDocx(R,data?{data:data,w:W,h:H}:null,d2?{data:d2,w:W2,h:H2}:null);
     download(blob,safeName(state.name)+"_沉陷計算書.docx");
     caseToast(data?"已匯出 Word 計算書。":"已匯出 Word 計算書（此瀏覽器無法產生圖表，已略過圖 1）。");
   }).catch(function(){caseToast("匯出失敗，請再試一次。",true);}).then(function(){b.disabled=false;b.textContent="匯出 Word 計算書";});
