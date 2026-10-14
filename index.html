@@ -327,7 +327,6 @@ footer.notes p{margin:0 0 6px}
           <div class="f"><label for="Q">上部結構載重 Q<small>長期載重合計</small></label><div class="inp"><input id="Q" data-k="Q" inputmode="decimal"><span class="u" data-u="F">t</span></div></div>
           <div class="f"><label for="wf">基礎自重</label><div class="inp"><input id="wf" data-k="wf" inputmode="decimal"><span class="u" data-u="P">t/m²</span></div></div>
           <div class="f"><label for="qx">額外加載<small>回填、地坪、堆載</small></label><div class="inp"><input id="qx" data-k="qx" inputmode="decimal"><span class="u" data-u="P">t/m²</span></div></div>
-          <div class="f"><label for="qpre">預壓荷重<small>過去曾作用之預壓力，同範圍 2:1 擴散，用於計算 σ'c</small></label><div class="inp"><input id="qpre" data-k="qpre" inputmode="decimal"><span class="u" data-u="P">t/m²</span></div></div>
           <label class="switch"><input type="checkbox" id="deduct" data-k="deduct"> 扣除 Df 以上開挖土重</label>
         </fieldset>
         <fieldset>
@@ -456,7 +455,7 @@ footer.notes p{margin:0 0 6px}
       <table class="layers" id="layers">
         <thead><tr>
           <th>#</th><th>土層名稱</th><th>頂深 m</th><th>底深 m</th><th>γt <span data-u="G">t/m³</span><br>水位上</th><th>γsat <span data-u="G">t/m³</span><br>水位下</th><th>計算方法</th>
-          <th>e0</th><th>Cc</th><th>Cs</th><th>OCR<br>選填</th><th>M <span data-u="P">t/m²</span><br>彈性</th><th></th>
+          <th>e0</th><th>Cc</th><th>Cs</th><th>OCR</th><th>σ'p <span data-u="P">t/m²</span><br>選填</th><th>M <span data-u="P">t/m²</span><br>彈性</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -464,7 +463,7 @@ footer.notes p{margin:0 0 6px}
     </div>
     <div class="layer-foot">
       <div class="btns"><button type="button" class="primary" id="btn-add">新增土層</button></div>
-      <p class="hint">壓密：填 e0、Cc、Cs；OCR 選填（有填時 σ'c = OCR × σ'0，未填時由預壓荷重計算 σ'c）。彈性：填限制模數 M（= 1/mv）。不計：砂礫、岩盤等不計沉陷的土層。厚黏土建議按「對分」拆成 2～3 m 以內。</p>
+      <p class="hint">壓密：填 e0、Cc、Cs，以及 OCR 或 σ'p（σ'p 優先）。彈性：填限制模數 M（= 1/mv）。不計：砂礫、岩盤等不計沉陷的土層。厚黏土建議按「對分」拆成 2～3 m 以內。</p>
     </div>
   </section>
 
@@ -489,7 +488,7 @@ footer.notes p{margin:0 0 6px}
       </div>
       <div class="tbl-scroll">
         <table class="res" id="res">
-          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>Δσ/σ'v0</th><th>σ'c <span data-u="P">t/m²</span></th><th>公式</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
+          <thead><tr><th>#</th><th>土層</th><th>H m</th><th>中點 d m</th><th>σ'v0 <span data-u="P">t/m²</span></th><th>Δσ <span data-u="P">t/m²</span></th><th>Δσ/σ'v0</th><th>σ'p <span data-u="P">t/m²</span></th><th>公式</th><th>S cm</th><th>累積 cm</th><th>備註</th></tr></thead>
           <tbody></tbody>
           <tfoot></tfoot>
         </table>
@@ -508,7 +507,7 @@ footer.notes p{margin:0 0 6px}
     </div>
     <div>
       <h3>沉陷</h3>
-      <p>依規範式(4.4-1)、圖-解 4.4-3。σ'0 = σ'v0，σ'1 = σ'0 + Δσ；σ'c = σ'0 + Δσ_預壓（預壓荷重 2:1 擴散），該層有填 OCR 時改取 σ'c = OCR·σ'0。</p>
+      <p>依規範式(4.4-1)、圖-解 4.4-3。σ'0 = σ'v0，σ'c = σ'p（或 OCR·σ'0），σ'1 = σ'0 + Δσ。</p>
       <p>過壓密 σ'1 &gt; σ'c：ΔH = H·Cs/(1+e0)·log(σ'c/σ'0) + H·Cc/(1+e0)·log(σ'1/σ'c)　(解 4.4-5)</p>
       <p>過壓密 σ'1 ≤ σ'c：ΔH = H·Cs/(1+e0)·log(σ'1/σ'0)　(解 4.4-6)</p>
       <p>正常壓密 σ'c = σ'0：ΔH = H·Cc/(1+e0)·log(σ'1/σ'0)　(解 4.4-7)</p>
@@ -527,7 +526,7 @@ footer.notes p{margin:0 0 6px}
 (function(){
 "use strict";
 var DRAFT="settle-calc-t-v1", CASES="settle-cases-v1";
-var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:2700,wf:1.5,qx:0.5,qpre:0,deduct:true,crit:0.1,layers:[
+var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,gw:1,Q:2700,wf:1.5,qx:0.5,deduct:true,crit:0.1,layers:[
  {n:"回填層",bot:3,gt:1.8,gs:1.9,m:"不計"},
  {n:"軟弱粉土質黏土 (1)",bot:6,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
  {n:"軟弱粉土質黏土 (2)",bot:9,gt:1.75,gs:1.75,m:"壓密",e0:1.0,cc:0.35,cr:0.05,ocr:1.2},
@@ -539,11 +538,11 @@ var EXAMPLE={name:"範例：15×20 m 筏基",unit:"t",B:15,L:20,Df:3,Dq:3,GW:2,g
  {n:"黏土 (3)",bot:30,gt:1.8,gs:1.8,m:"壓密",e0:0.85,cc:0.30,cr:0.04,ocr:1.0},
  {n:"卵礫石層",bot:40,gt:2.1,gs:2.15,m:"不計"}
 ]};
-var FIX=["B","L","Df","Dq","GW","gw","Q","wf","qx","qpre","crit"];
+var FIX=["B","L","Df","Dq","GW","gw","Q","wf","qx","crit"];
 var LCOLS=[
  {k:"bot",l:"底深 m"},{k:"gt",l:"γt 水位上",u:"G"},{k:"gs",l:"γsat 水位下",u:"G"},{k:"m",l:"計算方法",sel:1},
- {k:"e0",l:"e0",on:["壓密"]},{k:"cc",l:"Cc",on:["壓密"]},{k:"cr",l:"Cs",on:["壓密"]},{k:"ocr",l:"OCR 選填",on:["壓密"]},
- {k:"M",l:"M",u:"P",on:["彈性"]}
+ {k:"e0",l:"e0",on:["壓密"]},{k:"cc",l:"Cc",on:["壓密"]},{k:"cr",l:"Cs",on:["壓密"]},{k:"ocr",l:"OCR",on:["壓密"]},
+ {k:"sp",l:"σ'p",u:"P",on:["壓密"]},{k:"M",l:"M",u:"P",on:["彈性"]}
 ];
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function $(id){return document.getElementById(id);}
@@ -562,7 +561,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){storageO
 function normalize(s){
   if(!s||!Array.isArray(s.layers))return null;
   var o=clone(EXAMPLE); Object.keys(o).forEach(function(k){if(s[k]!==undefined)o[k]=s[k];});
-  o.layers=s.layers.map(function(l){return {n:l.n||"",bot:l.bot,gt:l.gt,gs:l.gs,m:(["壓密","彈性","不計"].indexOf(l.m)>=0?l.m:"壓密"),e0:l.e0,cc:l.cc,cr:l.cr,ocr:l.ocr,M:l.M};});
+  o.layers=s.layers.map(function(l){return {n:l.n||"",bot:l.bot,gt:l.gt,gs:l.gs,m:(["壓密","彈性","不計"].indexOf(l.m)>=0?l.m:"壓密"),e0:l.e0,cc:l.cc,cr:l.cr,ocr:l.ocr,sp:l.sp,M:l.M};});
   if(typeof o.name!=="string")o.name="";
   o.unit=(s.unit==="kN")?"kN":"t";
   return o;
@@ -686,8 +685,8 @@ function convVal(v,f){var n=num(v); if(!isFinite(n))return v; return Math.round(
 function switchUnit(to){
   var from=state.unit==="kN"?"kN":"t"; if(to===from)return;
   var f=to==="kN"?GACC:1/GACC;
-  ["gw","Q","wf","qx","qpre"].forEach(function(k){state[k]=convVal(state[k],f);});
-  state.layers.forEach(function(l){["gt","gs","M"].forEach(function(k){l[k]=convVal(l[k],f);});});
+  ["gw","Q","wf","qx"].forEach(function(k){state[k]=convVal(state[k],f);});
+  state.layers.forEach(function(l){["gt","gs","sp","M"].forEach(function(k){l[k]=convVal(l[k],f);});});
   state.unit=to;
   fillFixed(); buildLayers(); applyUnitLabels(); run();
   caseToast("已切換為"+U().name+"（"+U().F+"、"+U().P+"、"+U().G+"），輸入值已依 1 t = 9.81 kN 換算。");
@@ -838,10 +837,9 @@ tbody.addEventListener("keydown",function(e){
 
 /* ---------- calculation ---------- */
 function compute(s){
-  var B=num(s.B),L=num(s.L),Df=num(s.Df),Dq=num(s.Dq),GW=num(s.GW),gw=num(s.gw),Q=num(s.Q),wf=num(s.wf),qx=num(s.qx),qpre=num(s.qpre),crit=num(s.crit);
-  if(!isFinite(qpre)||qpre<0)qpre=0;
+  var B=num(s.B),L=num(s.L),Df=num(s.Df),Dq=num(s.Dq),GW=num(s.GW),gw=num(s.gw),Q=num(s.Q),wf=num(s.wf),qx=num(s.qx),crit=num(s.crit);
   if(!isFinite(wf))wf=0; if(!isFinite(qx))qx=0; if(!isFinite(crit))crit=0.1; if(!isFinite(GW))GW=Infinity; if(!isFinite(gw))gw=1;
-  var R={ok:false,alerts:[],rows:[],B:B,L:L,Df:Df,Dq:Dq,GW:GW,gw:gw,crit:crit,Q:Q,wf:wf,qx:qx,qpre:qpre};
+  var R={ok:false,alerts:[],rows:[],B:B,L:L,Df:Df,Dq:Dq,GW:GW,gw:gw,crit:crit,Q:Q,wf:wf,qx:qx};
   if(!(B>0&&L>0)){R.alerts.push("請輸入基礎寬度 B 與長度 L（需大於 0）。");return R;}
   if(!isFinite(Df)||!isFinite(Dq)){R.alerts.push("請輸入基礎深度 Df 與荷重作用面深度 Dq。");return R;}
   if(!isFinite(Q)){R.alerts.push("請輸入上部結構載重 Q。");return R;}
@@ -880,9 +878,8 @@ function compute(s){
         if(!(isFinite(o.e0)&&isFinite(o.cc)&&isFinite(o.cr))){r.notes.push("缺 e0／Cc／Cs，未計沉陷");}
         else if(!(r.s0>0)||!(r.sf>0)){r.notes.push("有效應力 ≤ 0，無法計算");}
         else{
-          /* 規範圖-解 4.4-3：σ'0 = σ'v0，σ'c = σ'0 + Δσ_預壓（或 OCR·σ'0），σ'1 = σ'v0 + Δσ */
-          r.dspre=qpre*B*L/((B+r.z)*(L+r.z));
-          var sp; if(o.ocr>0){sp=o.ocr*r.s0; r.spSrc="OCR";} else {sp=r.s0+r.dspre; r.spSrc=qpre>0?"預壓":"σ'0";} r.sp=sp;
+          /* 規範圖-解 4.4-3：σ'0 = σ'v0，σ'c = σ'p，σ'1 = σ'v0 + Δσ */
+          var sp=(o.sp>0)?o.sp:((o.ocr>0?o.ocr:1)*r.s0); r.sp=sp;
           var k=r.H/(1+o.e0), S, tol=1e-6*r.s0;
           if(r.ds<=0){
             S=o.cr*k*Math.log10(r.sf/r.s0); r.eq="回脹";
@@ -961,7 +958,7 @@ function renderTable(R){
       '<td data-l="σ\'v0 '+U().P+'">'+(r.skip?"—":fmt(r.s0,2))+'</td>'+
       '<td data-l="Δσ '+U().P+'">'+(r.ds===undefined?"—":fmt(r.ds,2))+'</td>'+
       '<td data-l="Δσ/σ\'v0">'+(r.ratio===undefined?"—":fmt(r.ratio,3))+'</td>'+
-      '<td data-l="σ\'c '+U().P+'">'+(r.sp===undefined?"—":fmt(r.sp,2))+'</td>'+
+      '<td data-l="σ\'p '+U().P+'">'+(r.sp===undefined?"—":fmt(r.sp,2))+'</td>'+
       '<td data-l="適用公式" class="t-eq">'+eqLabel(r).replace("式(","").replace(")","")+'</td>'+
       '<td data-l="S cm"><span class="sbar"><b style="width:'+w+'px"></b>'+fmt(r.S||0,2)+'</span></td>'+
       '<td data-l="累積 cm">'+fmt(r.cum,2)+'</td>'+
@@ -1090,9 +1087,9 @@ $("btn-copy").addEventListener("click",function(){
   var L=[]; L.push(["項目","數值","單位"].join("\t"));
   summaryRows(R).forEach(function(a){L.push(a.join("\t"));});
   L.push("");
-  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 "+U().P,"Δσ "+U().P,"Δσ/σ'v0","σ'c "+U().P,"σ'c 來源","適用公式","S cm","累積 cm","備註"].join("\t"));
+  L.push(["#","土層","計算方法","頂深 m","底深 m","H m","中點 d m","σ'v0 "+U().P,"Δσ "+U().P,"Δσ/σ'v0","σ'p "+U().P,"適用公式","S cm","累積 cm","備註"].join("\t"));
   R.rows.forEach(function(r,i){
-    L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),r.spSrc||"",eqLabel(r)==="—"?"":eqLabel(r),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
+    L.push([i+1,r.o.n,r.o.m,fmt(r.o.top,2),fmt(r.o.bot,2),r.skip?"":fmt(r.H,2),r.skip?"":fmt(r.d,2),r.skip?"":fmt(r.s0,3),r.ds===undefined?"":fmt(r.ds,3),r.ratio===undefined?"":fmt(r.ratio,3),r.sp===undefined?"":fmt(r.sp,3),eqLabel(r)==="—"?"":eqLabel(r),fmt(r.S||0,3),fmt(r.cum,3),r.notes.join("；")].join("\t"));
   });
   var txt=L.join("\n"), toast=$("toast");
   function fallback(){var ta=$("copybuf"); ta.value=txt; ta.select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){} toast.textContent=ok?"已複製，可直接貼到 Excel。":"無法自動複製，請改用手動選取表格內容。";}
@@ -1179,25 +1176,25 @@ function buildDocx(R,png){
   body.push(table([4600,2600,2438],[["項目","數值","單位"],
     ["基礎寬度 B",fmt(R.B,2),"m"],["基礎長度 L",fmt(R.L,2),"m"],["基礎深度 Df",fmt(R.Df,2),"m"],["荷重作用面深度 Dq",fmt(R.Dq,2),"m"],
     ["地下水位深度 GWT",isFinite(R.GW)?fmt(R.GW,2):"—","m"],["水單位重 γw",fmt(R.gw,2),U().G],
-    ["上部結構載重 Q",fmt(R.Q,1),U().F],["基礎自重",fmt(R.wf,2),U().P],["額外加載",fmt(R.qx,2),U().P],["預壓荷重",fmt(R.qpre,2),U().P],
+    ["上部結構載重 Q",fmt(R.Q,1),U().F],["基礎自重",fmt(R.wf,2),U().P],["額外加載",fmt(R.qx,2),U().P],
     ["扣除 Df 以上開挖土重",R.deduct?"是":"否","—"],["影響深度準則 Δσ/σ'v0 ≤",fmt(R.crit,2),"—"]
   ],{align:["left","center","center"],sz:20}));
 
   body.push(para("二、土層參數",{style:"Heading1"}));
-  var lr=[["#","土層名稱","頂深\nm","底深\nm","γt","γsat","方法","e0","Cc","Cs","OCR","M"]];
+  var lr=[["#","土層名稱","頂深\nm","底深\nm","γt","γsat","方法","e0","Cc","Cs","OCR","σ'p","M"]];
   state.layers.forEach(function(l,i){var o=R.layers[i];
     function v(k,n){var z=num(l[k]);return isFinite(z)?fmt(z,n):"—";}
-    lr.push([i+1,l.n||"",fmt(o.top,2),v("bot",2),v("gt",2),v("gs",2),l.m,l.m==="壓密"?v("e0",3):"—",l.m==="壓密"?v("cc",3):"—",l.m==="壓密"?v("cr",3):"—",l.m==="壓密"?v("ocr",2):"—",l.m==="彈性"?v("M",0):"—"]);
+    lr.push([i+1,l.n||"",fmt(o.top,2),v("bot",2),v("gt",2),v("gs",2),l.m,l.m==="壓密"?v("e0",3):"—",l.m==="壓密"?v("cc",3):"—",l.m==="壓密"?v("cr",3):"—",l.m==="壓密"?v("ocr",2):"—",l.m==="壓密"?v("sp",2):"—",l.m==="彈性"?v("M",0):"—"]);
   });
   lr[0]=lr[0].map(function(h){return h.replace("\n"," ");});
-  body.push(table([380,2138,640,640,640,640,640,680,680,680,640,640],lr,{sz:16,align:["center","left"]}));
-  body.push(para("註：γt、γsat 單位 "+U().G+"；M 單位 "+U().P+"。OCR 為選填，有填時 σ'c = OCR × σ'0，未填時 σ'c = σ'0 + 預壓荷重引致之應力增量。",{sz:18,color:"5A676B",sp:[60,0]}));
+  body.push(table([380,1858,620,620,620,620,620,660,660,660,640,640,640],lr,{sz:16,align:["center","left"]}));
+  body.push(para("註：γt、γsat 單位 "+U().G+"；σ'p、M 單位 "+U().P+"。σ'p 未填時取 OCR × σ'v0。",{sz:18,color:"5A676B",sp:[60,0]}));
 
   body.push(para("三、計算方法",{style:"Heading1"}));
   ["總壓力：q_gross = Q/(B·L) + 基礎自重 + 額外加載；扣除開挖土重時，淨壓力 q_net = q_gross − σv(Df)。",
    "有效覆土應力：σ'v0 = σv − u。σv 由地表逐層累加（水位以上用 γt、以下用 γsat）；u = γw·(d − GWT)。",
    "應力增量（2:1 法）：Δσ = q_net·B·L / [(B + z)(L + z)]，z 為土層中點至荷重作用面之深度。荷重作用面以上之土層不計沉陷。",
-   "壓密沉陷：依《建築物基礎構造設計規範》式(4.4-1)及圖-解 4.4-3 計算。σ'0 為土層中點初始有效覆土應力（即 σ'v0），σ'c 為最大預壓密壓力，σ'c = σ'0 + Δσ_預壓，Δσ_預壓 = q_預壓·B·L / [(B + z)(L + z)]（預壓荷重 q_預壓 = "+fmt(R.qpre,2)+" "+U().P+"，與基礎同範圍以 2:1 擴散）；該層有輸入 OCR 時改取 σ'c = OCR × σ'0。σ'1 = σ'0 + Δσ。",
+   "壓密沉陷：依《建築物基礎構造設計規範》式(4.4-1)及圖-解 4.4-3 計算。σ'0 為土層中點初始有效覆土應力（即 σ'v0），σ'c 為最大預壓密壓力（即 σ'p，未填時取 OCR × σ'0），σ'1 = σ'0 + Δσ。",
    "　(a) 過壓密土壤（σ'c > σ'0），σ'1 > σ'c：ΔH = H·Cs/(1+e0)·log(σ'c/σ'0) + H·Cc/(1+e0)·log(σ'1/σ'c)　式(解 4.4-5)",
    "　(a) 過壓密土壤（σ'c > σ'0），σ'1 ≤ σ'c：ΔH = H·Cs/(1+e0)·log(σ'1/σ'0)　式(解 4.4-6)",
    "　(b) 正常壓密土壤（σ'c = σ'0）：ΔH = H·Cc/(1+e0)·log(σ'1/σ'0)　式(解 4.4-7)",
@@ -1208,14 +1205,14 @@ function buildDocx(R,png){
   if(Math.abs(R.Dq-R.Df)>1e-6)body.push(para("•　荷重作用面深度 Dq（"+fmt(R.Dq,2)+" m）與基礎深度 Df（"+fmt(R.Df,2)+" m）不同，依 Terzaghi & Peck 等值基礎法（規範圖-解 5.5-3）計算：開挖土重僅扣除 Df 以上部分，Df～Dq 間土重已含於 σ'v0。",{ind:360,hang:360,sp:[0,60]}));
 
   body.push(para("四、逐層計算結果",{style:"Heading1"}));
-  var rr=[["#","土層","H m","中點 d m","σ'v0","Δσ","Δσ/σ'v0","σ'c","適用公式","S cm","累積 cm"]];
+  var rr=[["#","土層","H m","中點 d m","σ'v0","Δσ","Δσ/σ'v0","σ'p","適用公式","S cm","累積 cm"]];
   R.rows.forEach(function(r,i){
     var fill=r.inside?"EAF2F7":"";
     rr.push([i+1,r.o.n,r.skip?"—":fmt(r.H,2),r.skip?"—":fmt(r.d,2),r.skip?"—":fmt(r.s0,2),r.ds===undefined?"—":fmt(r.ds,2),r.ratio===undefined?"—":fmt(r.ratio,3),r.sp===undefined?"—":fmt(r.sp,2),eqLabel(r),fmt(r.S||0,2),fmt(r.cum,2)].map(function(v,ci){return {t:v,fill:fill,jc:ci===1?"left":"center"};}));
   });
   rr.push([{t:""},{t:"合計",b:true},"","","","","","","",{t:fmt(R.total,2),b:true},""]);
   body.push(table([380,1740,700,820,820,820,820,820,1078,820,820],rr,{sz:16}));
-  body.push(para("註：σ'v0、Δσ、σ'c 單位 "+U().P+"。適用公式為規範式(解 4.4-5)～(解 4.4-8)。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
+  body.push(para("註：σ'v0、Δσ、σ'p 單位 "+U().P+"；σ'p 即規範圖-解 4.4-3 之 σ'c。適用公式為規範式(解 4.4-5)～(解 4.4-8)。底色標示之土層尚未達影響深度準則。",{sz:18,color:"5A676B",sp:[60,60]}));
   var notes=R.rows.map(function(r,i){return r.notes.length?("第 "+(i+1)+" 層（"+r.o.n+"）："+r.notes.join("；")):null;}).filter(Boolean);
   if(notes.length){body.push(para("各層備註：",{b:true,sp:[60,0],sz:20}));notes.forEach(function(t){body.push(para("•　"+t,{ind:360,hang:360,sp:[0,0],sz:20}));});}
 
