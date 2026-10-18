@@ -168,7 +168,7 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.5}
 .calc .fr>span{padding:0 3px;white-space:nowrap}
 .calc .fr>span:first-child{border-bottom:1px solid currentColor}
 .calc .pa{font-size:1.9em;line-height:1;font-weight:300;margin:0 -1px}
-.calc sub{font-size:.75em}
+.calc sub,.calc sup{font-size:.75em}
 .calc .tk{display:inline;white-space:normal}
 .calc .tk .fr{margin:0 2px}
 .calc .lg{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle}
@@ -593,6 +593,7 @@ footer.notes p{margin:0 0 6px}
         </div>
       </div>
       <div class="tsum" id="tsum"></div>
+      <div class="calc" id="tcalc" aria-label="壓密時間計算式" style="margin-bottom:12px"></div>
       <div class="tbl-scroll">
         <table class="res tg" id="tg">
           <thead><tr><th>群組</th><th>土層</th><th>深度範圍 m</th><th>H m</th><th>排水條件</th><th>cv <span class="cvuLbl">m²/年</span></th><th>Hdr m</th><th>Sc cm<br>影響深度內</th><th>t50 年</th><th>t90 年</th><th>U(t)</th><th>S(t) cm</th></tr></thead>
@@ -1218,6 +1219,58 @@ function renderTable(R){
 /* ---------- consolidation time ---------- */
 var tgBody=document.querySelector("#tg tbody"), tgSig=null;
 function fy(t){if(!isFinite(t))return "—"; if(t<0.1)return fmt(t,3); if(t<10)return fmt(t,2); return fmt(t,1);}
+function renderTimeCalc(R){
+  var box=$("tcalc"); if(!box)return; if(!R.ok||!R.time){box.innerHTML="";return;}
+  var T=R.time, inf=R.inf, k=T.k||1, f2=function(v){return fmt(v,2);}, f3=function(v){return fmt(v,3);}, f4=function(v){return fmt(v,4);};
+  var CVF={m2y:1,m2h:8760,cm2m:52.56,cm2s:3153.6}, cf=CVF[T.cvu]||1, tq=T.tq;
+  function F(n,d){return '<span class="fr"><span>'+n+'</span><span>'+d+'</span></span>';}
+  function LN(){return '<div class="ln">'+Array.prototype.slice.call(arguments).map(function(t){return '<span class="tk">'+t+'</span>';}).join("")+'</div>';}
+  function SQ(x){return '<span class="lg">√<span class="pa">(</span>'+x+'<span class="pa">)</span></span>';}
+  var cv="c<sub>v</sub>", Hd="H<sub>dr</sub>", Tv="T<sub>v</sub>", Sc="S<sub>c</sub>";
+  var h=[];
+  h.push('<h3>基本公式（Terzaghi 一維壓密）</h3><div class="eqs">'+
+    LN(Tv+" =",F(cv+"·t",Hd+"<sup>2</sup>"),"　"+Hd+" = H/2（雙向排水）；"+Hd+" = H（單向排水）")+
+    LN("U ≤ 60%（"+Tv+" ≤ 0.2827）：U =",SQ(F("4"+Tv,"π")))+
+    LN("U > 60%：U = 1 −",F("10<sup>(1.781 − "+Tv+")/0.933</sup>","100"))+
+    LN("t<sub>50</sub> =",F("0.197·"+Hd+"<sup>2</sup>",cv),"　t<sub>90</sub> =",F("0.848·"+Hd+"<sup>2</sup>",cv))+
+    LN("S(t) = S<sub>e</sub> + Σ U<sub>i</sub>(t)·"+Sc+"<sub>,i</sub>（S<sub>e</sub>：影響深度以內彈性沉陷，視為立即發生）")+'</div>');
+  if(T.ov){
+    h.push('<h3>自訂總沉陷量之比例調整</h3><div class="eqs">'+LN("k =",F("自訂值","計算值"),"=",F(f2(T.Sfin),f2(T.Scalc)),"= "+f4(k))+LN("各群組 "+Sc+" 與 S<sub>e</sub> 皆乘以 k")+'</div>');
+  }
+  var parts=[];
+  T.groups.forEach(function(g){
+    var L=[], rows=g.rows.filter(function(r){return inf===null||r.d<=inf;});
+    L.push(LN("H = "+(rows.length>1?rows.map(function(r){return f2(r.H);}).join(" + ")+" = ":"")+f2(g.H)+" m（"+f2(g.top)+"～"+f2(g.bot)+" m）"));
+    L.push(LN(Hd+" = "+(g.dr==="單向"?"H = "+f2(g.Hdr):"H/2 = "+f2(g.H)+"/2 = "+f2(g.Hdr))+" m（"+g.dr+"排水）"));
+    var raw=rows.reduce(function(t,r){return t+(r.S||0);},0);
+    L.push(LN(Sc+" = ΣS<sub>i</sub> = "+(rows.length>1?rows.map(function(r){return f2(r.S);}).join(" + ")+" = ":"")+f2(raw)+" cm"+(k!==1?"；× k = "+f2(raw)+" × "+f4(k)+" = "+f2(g.Sin)+" cm":"")));
+    if(!g.ok){L.push(LN("未填 "+cv+"，視為立即完成：U = 100%，S(t) = "+Sc+" = "+f2(g.Sin)+" cm"));}
+    else{
+      if(cf!==1)L.push(LN(cv+" = "+(+g.cvIn.toPrecision(6))+" "+CVU[T.cvu]+" × "+({m2h:"8,760",cm2m:"52.56",cm2s:"3,153.6"}[T.cvu])+" = "+(+g.cv.toPrecision(5))+" m²/年"));
+      else L.push(LN(cv+" = "+(+g.cv.toPrecision(6))+" m²/年"));
+      var tv=g.cv*tq/(g.Hdr*g.Hdr), u=Uof(tv);
+      L.push(LN(Tv+" =",F(cv+"·t",Hd+"<sup>2</sup>"),"=",F((+g.cv.toPrecision(5))+" × "+fy(tq),f2(g.Hdr)+"<sup>2</sup>"),"= "+f4(tv)));
+      if(tv<=0)L.push(LN("U = 0"));
+      else if(tv<=0.2827)L.push(LN("U =",SQ(F("4"+Tv,"π")),"=",SQ(F("4 × "+f4(tv),"π")),"= "+(u*100).toFixed(1)+"%"));
+      else if(u>=1)L.push(LN("U = 1 −",F("10<sup>(1.781 − "+f4(tv)+")/0.933</sup>","100"),"→ 100%"));
+      else L.push(LN("U = 1 −",F("10<sup>(1.781 − "+f4(tv)+")/0.933</sup>","100"),"= "+(u*100).toFixed(1)+"%"));
+      L.push(LN("S(t) = U·"+Sc+" = "+(u*100).toFixed(1)+"% × "+f2(g.Sin)+" = <b>"+f2(u*g.Sin)+" cm</b>"));
+      L.push(LN("t<sub>50</sub> =",F("0.197 × "+f2(g.Hdr)+"<sup>2</sup>",String(+g.cv.toPrecision(5))),"= "+fy(g.t50)+" 年　t<sub>90</sub> =",F("0.848 × "+f2(g.Hdr)+"<sup>2</sup>",String(+g.cv.toPrecision(5))),"= "+fy(g.t90)+" 年"));
+      parts.push({u:u,S:g.Sin});
+      return void h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　'+esc(g.names.join("、"))+'<small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
+    }
+    parts.push({u:1,S:g.Sin});
+    h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　'+esc(g.names.join("、"))+'<small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
+  });
+  if(!T.groups.length)h.push('<div class="eqs">'+LN("影響深度以內沒有壓密層，沉陷視為立即發生。")+'</div>');
+  var terms=parts.map(function(p){return (p.u*100).toFixed(1)+"% × "+f2(p.S);});
+  h.push('<h3>t = '+fy(tq)+' 年　影響深度以內 S(t)</h3><div class="eqs">'+
+    LN("S(t) = S<sub>e</sub> + Σ U<sub>i</sub>·"+Sc+"<sub>,i</sub> = "+f2(T.SimmIn)+(terms.length?" + "+terms.join(" + "):"")+" = <b>"+f2(T.SqIn)+" cm</b>")+
+    (T.Scons!==0?LN("U(t) =",F("S(t) − S<sub>e</sub>","Σ"+Sc+"<sub>,i</sub>"),"=",F(f2(T.SqIn)+" − "+f2(T.SimmIn),f2(T.Scons)),"= "+(T.Uq*100).toFixed(1)+"%"):"")+
+    LN("壓密沉陷達 50%／90% 所需時間"+(parts.length>1?"（多群組以 S(t) 曲線反算）":"")+"："+fy(T.t50all)+"／"+fy(T.t90all)+" 年")+'</div>');
+  var det=box.querySelector("details.cp"), wasOpen=det?det.open:false;
+  box.innerHTML='<details class="cp"'+(wasOpen?" open":"")+'><summary>計算過程</summary><div class="cpb">'+h.join("")+'</div></details>';
+}
 function renderTime(R){
   var tsum=$("tsum");
   if(!R.ok||!R.time){tsum.innerHTML="";tgBody.innerHTML="";tgSig=null;$("tchart").innerHTML="";return;}
@@ -1270,6 +1323,7 @@ function renderTime(R){
     tr.querySelector(".g-St").textContent=fmt(g.Sin*u,2);
     tr.querySelector('[data-g=cv]').classList.toggle("bad",!g.ok);
   });
+  renderTimeCalc(R);
   drawTime(R);
 }
 tgBody.addEventListener("input",function(e){
