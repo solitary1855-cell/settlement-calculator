@@ -169,6 +169,7 @@ figcaption{font-size:12px;color:var(--muted);line-height:1.5}
 .calc .fr>span:first-child{border-bottom:1px solid currentColor}
 .calc .pa{font-size:1.9em;line-height:1;font-weight:300;margin:0 -1px}
 .calc sub,.calc sup{font-size:.75em}
+sub{line-height:0}
 .calc .tk{display:inline;white-space:normal}
 .calc .tk .fr{margin:0 2px}
 .calc .lg{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle}
@@ -463,11 +464,11 @@ footer.notes p{margin:0 0 6px}
                   <line class="raft" x1="76" x2="144" y1="197" y2="197"/>
                   <line class="spread" x1="76" x2="46" y1="197" y2="257"/><line class="spread" x1="144" x2="174" y1="197" y2="257"/>
                   <line class="dim" x1="166" x2="166" y1="130" y2="197"/><line class="dim" x1="161" x2="171" y1="130" y2="130"/><line class="dim" x1="161" x2="171" y1="197" y2="197"/>
-                  <text class="t-s" x="170" y="168">2/3 L₂</text>
+                  <text class="t-s" x="170" y="168">2/3 L<tspan dy="3" font-size="75%">2</tspan></text>
                   <line class="dim" x1="200" x2="200" y1="130" y2="230"/><line class="dim" x1="195" x2="205" y1="130" y2="130"/><line class="dim" x1="195" x2="205" y1="230" y2="230"/>
-                  <text class="t-s" x="203" y="222">L₂</text>
+                  <text class="t-s" x="203" y="222">L<tspan dy="3" font-size="75%">2</tspan></text>
                   <line class="dim" x1="196" x2="196" y1="50" y2="130"/><line class="dim" x1="191" x2="201" y1="50" y2="50"/>
-                  <text class="t-s" x="174" y="94">L₁</text>
+                  <text class="t-s" x="174" y="94">L<tspan dy="3" font-size="75%">1</tspan></text>
                   <text class="t-a" x="4" y="193">等值筏基</text>
                   <text class="t-m" x="8" y="62">軟弱層</text>
                   <text class="t-m" x="8" y="148">承載層</text>
@@ -660,6 +661,43 @@ function $(id){return document.getElementById(id);}
 function num(v){if(v===null||v===undefined||v==="")return NaN; var x=parseFloat(String(v).replace(/,/g,"")); return isFinite(x)?x:NaN;}
 function fmt(x,n){if(x===null||x===undefined||!isFinite(x))return "—"; return x.toFixed(n===undefined?2:n);}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+/* ---------- 參數代號上下標 ---------- */
+var SYM_ALL=new RegExp([/σ'(v0|[01cp])(?![A-Za-z0-9])/,/σ(v)(?![A-Za-z0-9])/,/\bq_(net|gross)\b/,/γ(sat|w|t)(?![A-Za-z0-9])/,/\bD([fq])\b/,/\be(0)\b/,/\bC([cs])\b/,/\bc(v)\b/,/\bH(dr)\b/,/\bt(50|90)\b/,/\bT(v)\b/,/\bS(c_i)\b/,/\bU_(i)\b/,/\bS(c)\b/,/\bm(v)\b/,/L([₁₂])/].map(function(r){return r.source;}).join("|"),"g");
+function symParts(s){
+  s=String(s); var out=[], last=0, m; SYM_ALL.lastIndex=0;
+  while((m=SYM_ALL.exec(s))){
+    var gi=1; while(m[gi]===undefined)gi++;
+    var sub=m[gi], w=m[0], base=w.slice(0,w.lastIndexOf(sub)).replace(/_$/,"");
+    if(m.index>last)out.push([s.slice(last,m.index),0]);
+    out.push([base,0]); out.push([sub.replace("_",",").replace("₁","1").replace("₂","2"),1]);
+    last=SYM_ALL.lastIndex;
+  }
+  if(last<s.length)out.push([s.slice(last),0]);
+  return out;
+}
+function symSVG(s){var o="",low=false; symParts(s).forEach(function(p){
+  if(p[1]){o+='<tspan dy="3" font-size="75%">'+esc(p[0])+'</tspan>';low=true;}
+  else if(low){o+='<tspan dy="-3">'+esc(p[0])+'</tspan>';low=false;}
+  else o+=esc(p[0]);}); return o;}
+var SYM_SKIP={INPUT:1,TEXTAREA:1,SELECT:1,OPTION:1,SCRIPT:1,STYLE:1,SUB:1,SUP:1};
+function symOK(n){for(var e=n.parentNode;e&&e.nodeType===1;e=e.parentNode){if(SYM_SKIP[e.tagName]||e.namespaceURI!=="http://www.w3.org/1999/xhtml"||e.classList.contains("nosym")||e.classList.contains("t-name"))return false;} return true;}
+function symText(n){
+  SYM_ALL.lastIndex=0; if(!SYM_ALL.test(n.nodeValue)||!symOK(n))return;
+  var f=document.createElement("span"); f.className="sy";
+  symParts(n.nodeValue).forEach(function(p){if(p[1]){var e=document.createElement("sub");e.textContent=p[0];f.appendChild(e);} else if(p[0])f.appendChild(document.createTextNode(p[0]));});
+  n.parentNode.replaceChild(f,n);
+}
+function symWalk(root){
+  if(!root)return; if(root.nodeType===3){if(root.parentNode)symText(root);return;}
+  if(root.nodeType!==1)return;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null), a=[], n; while((n=w.nextNode()))a.push(n); a.forEach(symText);
+}
+var SYM_OPT={childList:true,subtree:true,characterData:true};
+var symObs=new MutationObserver(function(ms){
+  symObs.disconnect();
+  ms.forEach(function(m){ if(m.type==="characterData")symWalk(m.target); else Array.prototype.forEach.call(m.addedNodes,symWalk); });
+  symObs.observe(document.body,SYM_OPT);
+});
 function r3(x){return Math.round(x*1000)/1000;}
 var GACC=9.81;
 var UNITS={t:{key:"t",name:"公噸制",F:"t",P:"t/m²",G:"t/m³"},kN:{key:"kN",name:"SI 制",F:"kN",P:"kPa",G:"kN/m³"}};
@@ -1146,7 +1184,7 @@ function renderCalc(R){
         }
       }else L.push(LN("有效應力 ≤ 0，無法計算"));
     }
-    return '<div class="lay-h">第 '+(i+1)+' 層　'+esc(o.n)+'<small>H = '+f2(r.H)+' m，d = '+f2(r.d)+' m，'+tag+'</small></div><div class="eqs">'+L.join("")+'</div>';
+    return '<div class="lay-h">第 '+(i+1)+' 層　<span class="nosym">'+esc(o.n)+'</span><small>H = '+f2(r.H)+' m，d = '+f2(r.d)+' m，'+tag+'</small></div><div class="eqs">'+L.join("")+'</div>';
   }
   var calc=R.rows.map(function(r,i){return {r:r,i:i};}).filter(function(x){return !x.r.skip&&!x.r.above&&x.r.ds!==undefined&&(x.r.o.m==="壓密"||x.r.o.m==="彈性");});
   var within=calc.filter(function(x){return R.inf===null||x.r.d<=R.inf;}), below=calc.filter(function(x){return !(R.inf===null||x.r.d<=R.inf);});
@@ -1257,10 +1295,10 @@ function renderTimeCalc(R){
       L.push(LN("S(t) = U·"+Sc+" = "+(u*100).toFixed(1)+"% × "+f2(g.Sin)+" = <b>"+f2(u*g.Sin)+" cm</b>"));
       L.push(LN("t<sub>50</sub> =",F("0.197 × "+f2(g.Hdr)+"<sup>2</sup>",String(+g.cv.toPrecision(5))),"= "+fy(g.t50)+" 年　t<sub>90</sub> =",F("0.848 × "+f2(g.Hdr)+"<sup>2</sup>",String(+g.cv.toPrecision(5))),"= "+fy(g.t90)+" 年"));
       parts.push({u:u,S:g.Sin});
-      return void h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　'+esc(g.names.join("、"))+'<small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
+      return void h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　<span class="nosym">'+esc(g.names.join("、"))+'</span><small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
     }
     parts.push({u:1,S:g.Sin});
-    h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　'+esc(g.names.join("、"))+'<small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
+    h.push('<div class="lays"><div><div class="lay-h">群組 '+g.no+'　<span class="nosym">'+esc(g.names.join("、"))+'</span><small>'+g.dr+'排水</small></div><div class="eqs">'+L.join("")+'</div></div></div>');
   });
   if(!T.groups.length)h.push('<div class="eqs">'+LN("影響深度以內沒有壓密層，沉陷視為立即發生。")+'</div>');
   var terms=parts.map(function(p){return (p.u*100).toFixed(1)+"% × "+f2(p.S);});
@@ -1500,7 +1538,7 @@ function svgString(R,W,Hh,exp){
   }
   var qy=y(R.Dq);
   svg.push('<line '+A("qline")+' x1="'+cx+'" x2="'+plotR+'" y1="'+qy+'" y2="'+qy+'"/>');
-  svg.push('<text '+T("lbl")+' x="'+(plotR-4)+'" y="'+(qy-5)+'" text-anchor="end">荷重作用面 Dq = '+fmt(R.Dq,2)+' m · q_net '+fmt(R.qn,2)+'</text>');
+  svg.push('<text '+T("lbl")+' x="'+(plotR-4)+'" y="'+(qy-5)+'" text-anchor="end">'+symSVG('荷重作用面 Dq = '+fmt(R.Dq,2)+' m · q_net '+fmt(R.qn,2))+'</text>');
   function path(sel,idx,mult){var d="",st=false; pts.forEach(function(p){var v=p[idx]; if(v===null){st=false;return;} v*=mult||1; d+=(st?"L":"M")+x(Math.max(0,v)).toFixed(1)+" "+y(p[0]).toFixed(1); st=true;}); return '<path '+A(sel)+' d="'+d+'"/>';}
   var ad="", first=null, lastp=null;
   pts.forEach(function(p){if(p[2]===null)return; var X=x(Math.max(0,p[2])),Y=y(p[0]); if(first===null){first=Y;ad+="M"+x(0)+" "+Y+"L"+X+" "+Y;} else ad+="L"+X+" "+Y; lastp=Y;});
@@ -1516,9 +1554,9 @@ function svgString(R,W,Hh,exp){
   }
   if(exp){
     var ly=Hh-4, lx=axL;
-    svg.push('<line x1="'+lx+'" x2="'+(lx+20)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" '+EXP["l-sv"]+'/><text '+EXP.tx+' x="'+(lx+24)+'" y="'+ly+'">σ\'v0</text>');
+    svg.push('<line x1="'+lx+'" x2="'+(lx+20)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" '+EXP["l-sv"]+'/><text '+EXP.tx+' x="'+(lx+24)+'" y="'+ly+'">'+symSVG("σ'v0")+'</text>');
     svg.push('<line x1="'+(lx+80)+'" x2="'+(lx+100)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" '+EXP["l-ds"]+'/><text '+EXP.tx+' x="'+(lx+104)+'" y="'+ly+'">Δσ（2:1）</text>');
-    svg.push('<line x1="'+(lx+190)+'" x2="'+(lx+210)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" '+EXP["l-cr"]+'/><text '+EXP.tx+' x="'+(lx+214)+'" y="'+ly+'">準則 × σ\'v0</text>');
+    svg.push('<line x1="'+(lx+190)+'" x2="'+(lx+210)+'" y1="'+(ly-4)+'" y2="'+(ly-4)+'" '+EXP["l-cr"]+'/><text '+EXP.tx+' x="'+(lx+214)+'" y="'+ly+'">'+symSVG("準則 × σ'v0")+'</text>');
   }
   svg.push('</svg>');
   return svg.join("");
@@ -1611,7 +1649,8 @@ function zip(files){
 }
 function x(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function run_(t,o){o=o||{};var rp="";if(o.b)rp+="<w:b/><w:bCs/>";if(o.color)rp+='<w:color w:val="'+o.color+'"/>';if(o.sz)rp+='<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>';
-  return "<w:r>"+(rp?"<w:rPr>"+rp+"</w:rPr>":"")+'<w:t xml:space="preserve">'+x(t)+"</w:t></w:r>";}
+  return symParts(t).map(function(p){if(!p[0])return ""; var r=rp+(p[1]?'<w:vertAlign w:val="subscript"/>':"");
+    return "<w:r>"+(r?"<w:rPr>"+r+"</w:rPr>":"")+'<w:t xml:space="preserve">'+x(p[0])+"</w:t></w:r>";}).join("");}
 function para(content,o){o=o||{};var pp="";if(o.style)pp+='<w:pStyle w:val="'+o.style+'"/>';if(o.keep)pp+="<w:keepNext/>";if(o.jc)pp+='<w:jc w:val="'+o.jc+'"/>';if(o.sp)pp+='<w:spacing w:before="'+(o.sp[0]||0)+'" w:after="'+(o.sp[1]||0)+'"/>';if(o.ind)pp+='<w:ind w:left="'+o.ind+'" w:hanging="'+(o.hang||0)+'"/>';
   var runs=Array.isArray(content)?content.map(function(c){return typeof c==="string"?run_(c,o):run_(c.t,Object.assign({},o,c));}).join(""):run_(content,o);
   return "<w:p>"+(pp?"<w:pPr>"+pp+"</w:pPr>":"")+runs+"</w:p>";}
@@ -1782,6 +1821,7 @@ $("btn-word").addEventListener("click",function(){
 });
 
 fillFixed(); buildLayers(); applyUnitLabels(); run();
+symWalk(document.body); symObs.observe(document.body,SYM_OPT);
 if(!storageOK){caseToast("這個瀏覽器不允許本機儲存，請改用「備份檔」保存案件。",true);}
 })();
 </script>
